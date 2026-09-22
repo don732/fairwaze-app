@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { paywall } from "../lib/billing.mjs";
 import { storeFor, pinOk, tripOf, setTrip } from "../lib/trip.mjs";
 import { notify, escRe } from "../lib/push.mjs";
 import { guard } from "../lib/claims.mjs";
@@ -12,6 +13,7 @@ const clean = (s, n) => String(s ?? "").replace(/[\u0000-\u0008\u000B-\u001F]/g,
 
 export default async (req, context) => {
   setTrip(tripOf(req));
+  if (req.method !== "GET" && req.method !== "HEAD") { const pw = await paywall(tripOf(req)); if (pw) return pw; }
   const url = new URL(req.url);
   const store = storeFor(req, "myrtle-feed");
 

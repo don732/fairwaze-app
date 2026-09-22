@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { paywall } from "../lib/billing.mjs";
 import { storeFor, pinOk, tripOf, setTrip } from "../lib/trip.mjs";
 import { guard } from "../lib/claims.mjs";
 
@@ -11,6 +12,7 @@ const ID = /^[a-z][a-z0-9]{0,15}$/;
 
 export default async (req) => {
   setTrip(tripOf(req));
+  if (req.method !== "GET" && req.method !== "HEAD") { const pw = await paywall(tripOf(req)); if (pw) return pw; }
   const url = new URL(req.url);
   const kind = url.searchParams.get("kind");
   if (!KINDS.has(kind)) return new Response("Bad kind", { status: 400 });

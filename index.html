@@ -708,6 +708,17 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+
+.stbar.bill{background:var(--lime);color:#000;cursor:pointer;font-weight:700}
+.lock{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--green)}
+.lock-card{max-width:520px;background:var(--paper);color:#000;border:4px solid #000;box-shadow:8px 8px 0 #000;padding:20px}
+.lock-card h1{font:400 clamp(30px,8vw,44px)/1 var(--disp);margin:6px 0 10px}.lock-card p{font-weight:600}.lock-card .btn{margin:12px 0}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.stbar.bill.warn{background:#ffb3ac}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 </style></head><body><div id="app"><p style="text-align:center;padding:40vh 0;font-family:serif">Raking the bunkers…</p></div><div id="toast" role="status" aria-live="polite"></div>
 <script>if(!/^\/t\/[a-z0-9-]{3,32}/i.test(location.pathname)){ location.replace('/home'); }</script><script>
 /* ===== ENGINE START ===== */
@@ -1064,6 +1075,47 @@ async function checkVersion(){
  try{ const r=await fetch('/version.json?t='+Date.now(),{cache:'no-store'}); if(!r.ok) return; const j=await r.json();
   if(j&&Number(j.build)>BUILD){ updateReady=Number(j.build); render(); } }catch(e){}
 }
+/* ===== BILLING: free week, then pay (Stripe) ===== */
+let billing=null;
+async function loadBilling(){
+ if(LEGACY||storageMode!=='netlify') return;
+ try{ const r=await fetch('/api/pay?slug='+encodeURIComponent(TRIP),{cache:'no-store'}); if(r.ok){ billing=await r.json(); render(); } }catch(e){}
+}
+const isCommish=()=>admin||(feedMe&&S.tournament&&feedMe===S.tournament.commissionerId);
+const fmtDay=iso=>{ try{ return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }catch(e){ return ''; } };
+const planPrice=bl=>bl.tier==='weekend'?'$99':'$149';
+function billingBanner(){
+ const bl=billing; if(!bl||!bl.configured||!bl.exists||!bl.active||!isCommish()) return '';
+ if(bl.trialing&&!bl.canceling) return `<div class="stbar bill" role="link" tabindex="0" data-nav="admin/setup">🏌️ Free week: ${bl.trialDaysLeft} day${bl.trialDaysLeft===1?'':'s'} left. Your card is charged ${planPrice(bl)} on ${fmtDay(bl.trialEnds)} — cancel before then and you pay nothing.</div>`;
+ if(bl.pastDue) return `<div class="stbar bill warn" role="link" tabindex="0" data-act="payManage">Your card didn’t go through. Stripe will retry — <b>update your card</b> to keep the trip running.</div>`;
+ return '';
+}
+function lockScreen(){
+ const bl=billing; const first=bl.needsCard&&!bl.trialUsed;
+ return `<section class="lock"><div class="lock-card"><p class="k">Fairwaze</p>
+  <h1>${first?'One last step.':'This trip is paused.'}</h1>
+  <p>${first?`${esc(S.tournament.name)} is built and waiting. Add a card to start your <b>free week</b> — you’re charged ${planPrice(bl)} only if you keep it past day 7, and you can cancel any time before that.`:`${esc(S.tournament.name)} is paused${bl.canceled?' — the plan was cancelled':''}. Everything is saved — scores, bets, the feed — and comes back the moment it’s reactivated.`}</p>
+  <button class="btn wide big" data-act="payNow">${first?'Add a card — start the free week':`Reactivate — ${bl.tier==='weekend'?'$99':'$149 a year'}`}</button>
+  <p class="note">Commissioner only: you’ll need the trip PIN.</p>
+  <p class="note">Questions? <a href="mailto:dfrazier@fairwaze.app?subject=${encodeURIComponent('Fairwaze billing — '+TRIP)}">Contact us</a></p></div></section>`;
+}
+function billingCard(){
+ const bl=billing; if(LEGACY||!bl||!bl.exists) return '';
+ if(!bl.configured) return `<section class="composer bet"><p class="k">Billing</p><p class="note">Payments aren’t switched on for this site yet.</p></section>`;
+ const plan=bl.tier==='weekend'?'The Weekend · $99, live 30 days':'The Season · $149 a year, renews automatically';
+ const line=bl.grandfathered?'Free — this trip was set up before payments were switched on. Nothing to pay.':bl.needsCard?'No card on file yet — the free week starts when you add one.'
+  :bl.trialing&&bl.canceling?`Cancelled. Your free week runs to ${fmtDay(bl.trialEnds)} and you won’t be charged.`
+  :bl.trialing?`Free week — ends ${fmtDay(bl.trialEnds)}. Your card is charged ${planPrice(bl)} that day unless you cancel before then.`
+  :bl.pastDue?'Your last charge didn’t go through. Update your card and Stripe will retry.'
+  :bl.paid&&bl.tier==='weekend'?`Paid. Live through ${fmtDay(bl.endsAt)}.`
+  :bl.paid&&bl.canceling?`Paid through ${fmtDay(bl.endsAt)}. Set to cancel — it won’t renew.`
+  :bl.paid?`Paid. Renews ${bl.endsAt?fmtDay(bl.endsAt):'next year'}.`
+  :'Paused. Reactivate to pick up where you left off.';
+ const canStart=bl.needsCard||!bl.active;
+ return `<section class="composer bet"><p class="k">Billing</p><h3 style="margin:2px 0 4px">${plan}</h3><p class="note">${line}</p>
+  <div class="act-row">${canStart?`<button class="abtn go" data-act="payNow"><span>💳</span>${bl.needsCard&&!bl.trialUsed?'Add a card':'Reactivate'}<small>${bl.needsCard&&!bl.trialUsed?'Starts the free week':planPrice(bl)+' now'}</small></button>`:''}${bl.manage?`<button class="abtn" data-act="payManage"><span>⚙️</span>${bl.trialing&&!bl.canceling?'Cancel or manage':'Manage'}<small>Card, receipts, renewal</small></button>`:''}</div>
+  ${canStart?`<p class="note">Switch plans: <button class="lnk" data-act="payNow" data-tier="${bl.tier==='weekend'?'season':'weekend'}">${bl.tier==='weekend'?'The Season, $149/year':'The Weekend, $99'}</button></p>`:''}</section>`;
+}
 function updateBanner(){
  if(!updateReady) return '';
  return `<div class="stbar upd" role="link" tabindex="0" data-act="doUpdate">New version ready (Build ${updateReady}) — tap to update. You’re on Build ${BUILD}.</div>`;
@@ -1076,7 +1128,7 @@ function storageBanner(){
 }
 async function sha(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('mbc26:'+s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-const BUILD=131;
+const BUILD=133;
 let updateReady=false;
 let ROUTE='home';
 const scroller=()=>document.getElementById('scroller');
@@ -1285,7 +1337,8 @@ function render(force){
  const active=document.activeElement; const aid=active&&active.id; const sel=active&&active.selectionStart;
  document.querySelectorAll('details').forEach(dt=>{ const k=detailKey(dt); if(k&&KNOWN_DETAILS.has(k)){ if(dt.open) OPEN_DETAILS.add(k); else OPEN_DETAILS.delete(k); } });
  const sy=scrollTop();
- $('#app').innerHTML = `<div id="ptr">Pull to refresh</div>`+topbar(route)+`<div id="scroller">`+updateBanner()+raceCallBanner()+storageBanner()+sponsorStrip()+ticker()+`<main class="v-${v||'home'}">${fn()}</main>`+footer()+`</div>`+nav(route);
+ if(billing&&billing.configured&&billing.exists&&!billing.active&&ROUTE!=='admin'&&!String(ROUTE).startsWith('admin/')){ $('#app').innerHTML=lockScreen(); return; }
+ $('#app').innerHTML = `<div id="ptr">Pull to refresh</div>`+topbar(route)+`<div id="scroller">`+updateBanner()+billingBanner()+raceCallBanner()+storageBanner()+sponsorStrip()+ticker()+`<main class="v-${v||'home'}">${fn()}</main>`+footer()+`</div>`+nav(route);
  document.querySelectorAll('details').forEach(dt=>{ const k=detailKey(dt); if(k&&KNOWN_DETAILS.has(k)) dt.open=OPEN_DETAILS.has(k); });
  if(aid){ const el=document.getElementById(aid); if(el){ el.focus(); try{el.setSelectionRange(sel,sel);}catch(e){} } }
  scrollToY(sy);
@@ -3716,7 +3769,7 @@ function adminPage(tab){
  if(!admin) return `<section class="gate"><h1 class="pagetitle">Commissioner</h1><p class="sub">Enter the PIN. Golfers, go get a beer.</p>
  <input id="pin" class="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••"><button class="btn wide" data-act="unlock">Unlock</button><p class="note">${storageMode==='netlify'?'PIN is set in Netlify (COMMISSIONER_PIN).':'First-time PIN is 1022. Change it in Settings.'}</p></section>`;
  const tabs=[['setup','Setup'],['scores','Scores'],['teams','Teams'],['draw','Draw'],['players','Golfers'],['media','Photos'],['adjust','Adjust'],['settings','Settings'],['audit','Audit']];
- const body={setup:()=>waitingPanel()+checklistHTML()+phonesHTML()+`<p class="note">Tap a row to jump to it. Green means done.</p><button class="btn wide" data-act="shareInvite">📲 Share the invite with the group</button>`,scores:adScores,teams:adTeams,draw:adDraw,players:adPlayers,media:adMedia,adjust:adAdjust,settings:adSettings,audit:adAudit}[tab]||adScores;
+ const body={setup:()=>billingCard()+waitingPanel()+checklistHTML()+phonesHTML()+`<p class="note">Tap a row to jump to it. Green means done.</p><button class="btn wide" data-act="shareInvite">📲 Share the invite with the group</button>`,scores:adScores,teams:adTeams,draw:adDraw,players:adPlayers,media:adMedia,adjust:adAdjust,settings:adSettings,audit:adAudit}[tab]||adScores;
  return `<div class="adbar"><b>Commissioner</b><button class="lnk" data-act="lock">Lock</button></div><div class="tabs">${tabs.map(([k,l])=>`<div role="link" tabindex="0" data-nav="admin/${k}" class="${tab===k?'on':''}">${l}</div>`).join('')}</div>`+body();
 }
 function curAdminRound(){ if(adminRound==null){ const r=S.rounds.find(r=>r.status!=='final'); adminRound=r?r.n:5; } return S.rounds.find(r=>r.n===adminRound); }
@@ -3901,6 +3954,14 @@ async function act(a,el){
   try{ await feedApi.post({author:null,name:'🎡 The Wheel',text:`THE APP FEE: the Wheel of Misfortune landed on ${F(payer)}. He buys the app — ${money(t.fee)} to ${F(t.commissionerId)}.`},null); loadFeed(); }catch(e){}
   mfFee.on=false; mf.sig=''; go('home'); break; }
  case 'feeVoid': { if(!admin) return; if(!confirm('Void the app fee?')) return; await betEvent({type:'void',bet:el.dataset.id,by:null}); toast('Fee voided'); break; }
+ case 'payNow': { let pin=adminPin; if(!pin){ pin=prompt('Commissioner PIN for '+S.tournament.name+':'); if(!pin) return; }
+  toast('Opening checkout…');
+  try{ const r=await fetch('/api/pay',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:TRIP,pin,tier:el.dataset.tier||undefined})});
+   if(r.status===403){ toast('Wrong PIN'); return; } if(!r.ok){ toast(await r.text()); return; }
+   const j=await r.json(); location.href=j.url; }catch(e){ toast('No connection'); } break; }
+ case 'payManage': { let pin=adminPin; if(!pin){ pin=prompt('Commissioner PIN:'); if(!pin) return; }
+  try{ const r=await fetch('/api/pay',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:TRIP,pin,action:'manage'})});
+   if(!r.ok){ toast(await r.text()); return; } location.href=(await r.json()).url; }catch(e){ toast('No connection'); } break; }
  case 'poke': { const to=el.dataset.on; const it=pendingItems().find(x=>x.id===el.dataset.id&&x.kind===el.dataset.kind); if(!it) return;
   const me=feedMe&&feedMe!=='guest'?feedMe:null; if(!me&&!admin){ toast('Pick your name first'); return; }
   const from=me||S.tournament.commissionerId;
@@ -4241,7 +4302,7 @@ async function pickIdentity(v){
 }
 (async()=>{ try{ const v=await store.get('mbc26-sfx',false); sfx.on=v==null||v===''?true:v==='1'; }catch(e){ sfx.on=true; }
  try{ const g=new URLSearchParams(location.search).get('go'); if(g){ ROUTE=g; history.replaceState(null,'',location.pathname); } }catch(e){}
- await load(); const me=await store.get('mbc26-me',false); if(me) feedMe=me; await initFeedSeen(); deviceId=await store.get('mbc26-device',false); if(!deviceId){ deviceId='guest-'+Math.random().toString(36).slice(2,10); store.set('mbc26-device',deviceId,false); } render(); checkEvent(); await loadClaims(); await loadFeed(); await loadBets(); await loadSotd(); render(); syncAppBadge(); pushInit(); checkVersion(); themeInit(); })();
+ await load(); const me=await store.get('mbc26-me',false); if(me) feedMe=me; await initFeedSeen(); deviceId=await store.get('mbc26-device',false); if(!deviceId){ deviceId='guest-'+Math.random().toString(36).slice(2,10); store.set('mbc26-device',deviceId,false); } render(); checkEvent(); await loadClaims(); await loadFeed(); await loadBets(); await loadSotd(); render(); loadBilling(); try{ const q=new URLSearchParams(location.search); if(q.get('started')==='1'){ setTimeout(()=>toast('Card saved — your free week has started. Cancel any time before day 7 and you pay nothing.'),600); setTimeout(loadBilling,3500); history.replaceState(null,'',location.pathname); } else if(q.get('paid')==='1'){ setTimeout(()=>toast('Payment received — thank you. You’re all set.'),600); setTimeout(loadBilling,4000); history.replaceState(null,'',location.pathname); } else if(q.get('pay')==='cancel'){ setTimeout(()=>toast('Checkout cancelled — nothing was charged.'),600); history.replaceState(null,'',location.pathname); } }catch(e){} syncAppBadge(); pushInit(); checkVersion(); themeInit(); })();
 setInterval(checkVersion,5*60*1000);
 setInterval(()=>{ if(!S||!betsLoaded) return; try{ raceAutoStart(); }catch(e){} try{ raceCallTick(); }catch(e){} try{ replayCheck(); }catch(e){} if(ROUTE==='race'&&betState().some(b=>b.kind==='race'&&!b.order&&b.postAt)) render(); },10000);
 setInterval(async()=>{ if(ROUTE==='gulp'){ const n=BEERS.length; await loadBeers(); if(BEERS.length!==n) render(); return; } if(!['bets','duel','open','games'].includes(ROUTE)) return; const f=document.activeElement; if(f&&['INPUT','TEXTAREA','SELECT'].includes(f.tagName)) return; const n=BETEV.length; await loadBets(); if(BETEV.length!==n) render(); },15000);

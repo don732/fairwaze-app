@@ -708,6 +708,16 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+
+.stbar.bill{background:var(--lime);color:#000;cursor:pointer;font-weight:700}
+.lock{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--green)}
+.lock-card{max-width:520px;background:var(--paper);color:#000;border:4px solid #000;box-shadow:8px 8px 0 #000;padding:20px}
+.lock-card h1{font:400 clamp(30px,8vw,44px)/1 var(--disp);margin:6px 0 10px}.lock-card p{font-weight:600}.lock-card .btn{margin:12px 0}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.stbar.bill.warn{background:#ffb3ac}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 
 .wiz{max-width:720px;margin:0 auto;padding:14px 14px 60px;color:var(--cream)}
 .wz-head h1{font:400 clamp(34px,9vw,56px)/1 var(--disp);margin:4px 0 8px;text-shadow:4px 4px 0 #000}
@@ -730,6 +740,7 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .wz-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.wz-top .k{margin:0}
 .wz-contact{color:var(--lime);font:800 14px var(--cond);letter-spacing:.03em;text-decoration:underline;text-underline-offset:3px}
 .paste{margin:8px 0 10px;border:3px solid #000;background:#000;padding:8px 10px}.paste summary{cursor:pointer;color:var(--lime);font-weight:800}.paste .btn{margin-top:6px}
+.cardstep{background:var(--lime);color:#000;border:3px solid #000;box-shadow:5px 5px 0 #000;padding:12px;margin:10px 0 14px}.cardstep h3{font:400 22px var(--disp);margin:2px 0 4px}.cardstep .note{color:#000}.cardstep .btn{background:#000;color:var(--lime)}
 .wz-help{margin:28px 0 0;padding:14px;border:3px solid #000;background:#000;text-align:center}.wz-help p{margin:0 0 6px;font-weight:700;color:#d8cfb3}.wz-help .wz-contact{font-size:17px}
 </style></head><body><form name="signup" data-netlify="true" netlify-honeypot="bot-field" hidden><input name="event"><input name="link"><input name="plan"><input name="commissioner"><input name="email"><input name="mobile"><input name="venmo"><input name="golfers"><input name="first_round"><input name="again"><input name="bot-field"></form><div id="app"></div><script>
 /* ===== ENGINE START ===== */
@@ -1086,7 +1097,7 @@ function view(){
    <label>Commissioner PIN (4–8 digits)<input id="s-pin" inputmode="numeric" maxlength="8" value="${esc(cfg.pin)}"></label>
    <p class="note">This PIN unlocks scoring, settings and the setup checklist. Only you get it.</p>
    ${preview()}
-   <button type="button" class="btn wide big" data-act="build">🏌️ Build my site</button><p class="note">Nothing is charged here. You’ll get the link now and an email with the invoice.</p>`
+   <button type="button" class="btn wide big" data-act="build">🏌️ Build my site</button><p class="note">${window.PAY_ON?'Free for 7 days. You’ll add a card next — nothing is charged unless you keep it past day 7.':'Nothing is charged here.'}</p>`
  ][step];
  const contact=`<a class="wz-contact" href="mailto:${CONTACT}?subject=${encodeURIComponent('Fairwaze question')}&body=${encodeURIComponent('Hi — I have a question about setting up Fairwaze for my group.\n\n')}">Questions? Contact us</a>`;
  $('#app').innerHTML=`<div class="wiz"><header class="wz-head"><div class="wz-top"><p class="k">Fairwaze · New trip</p>${contact}</div><h1>${esc(STEPS[step])}</h1><div class="dots">${STEPS.map((_,i)=>`<i class="${i===step?'on':i<step?'done':''}"></i>`).join('')}</div></header><section class="wz-body">${body}</section><footer class="wz-foot">${step>0?'<button type="button" class="btn ghost" data-act="back">Back</button>':'<span></span>'}${step<STEPS.length-1?'<button type="button" class="btn" data-act="next">Next</button>':''}</footer><div id="out"></div><footer class="wz-help"><p>Stuck, or want us to set it up for you?</p>${contact}</footer></div>`;
@@ -1130,6 +1141,7 @@ async function buildInner(){
  try{ const r=await fetch('/api/provision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:cfg.slug,pin:cfg.pin,state,photos:{},email:cfg.commissioner.email,tier:cfg.tier})});
   if(!r.ok){ out.innerHTML=`<p class="err">${esc(await r.text())}</p>`; return; }
   const j=await r.json(); const url=location.origin+j.url;
+  let payOn=false; try{ const ps=await (await fetch('/api/pay?slug='+encodeURIComponent(cfg.slug),{cache:'no-store'})).json(); payOn=!!ps.configured; }catch(e){}
   const phKeys=Object.keys(built.photos||{}); let sent=0, missed=0;
   for(let i=0;i<phKeys.length;i+=8){ out.innerHTML=`<p class="note">Uploading photos… ${Math.min(i+8,phKeys.length)} of ${phKeys.length}</p>`; const batch=Object.fromEntries(phKeys.slice(i,i+8).map(k=>[k,built.photos[k]]));
    try{ const pr=await fetch('/api/provision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'photos',slug:cfg.slug,pin:cfg.pin,photos:batch})}); if(pr.ok){ sent+=(await pr.json()).saved||0; } else missed+=Object.keys(batch).length; }catch(e){ missed+=Object.keys(batch).length; } }
@@ -1137,7 +1149,7 @@ async function buildInner(){
   try{ const f=new URLSearchParams({'form-name':'signup',event:state.tournament.name,link:url,plan:cfg.tier==='weekend'?'The Weekend ($99)':'The Season ($149)',commissioner:((cfg.commissioner.first||'')+' '+(cfg.commissioner.last||'')).trim(),email:cfg.commissioner.email||'',mobile:cfg.commissioner.mobile||'',venmo:cfg.commissioner.venmo||'',golfers:String(state.players.length),first_round:(state.rounds[0]&&(state.rounds[0].course+' · '+(state.rounds[0].date||'')))||'',again:j.again?'yes (retry)':'no'});
    fetch('/new.html',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:f.toString()}).catch(()=>{}); }catch(e){}
   const invite=`⛳ ${state.tournament.name}${cfg.dates?' · '+cfg.dates:''}\n\n${url}\n\n1) Open that in Safari, tap Share → Add to Home Screen, then open it from the icon.\n2) Pick your name once (that phone becomes you).\n3) Feed → 🔔 Turn on notifications.`;
-  out.innerHTML=`<section class="done"><p class="k">It’s live</p><h2>${esc(state.tournament.name)}</h2><a class="btn wide big" href="${url}">Open your site →</a>${missed?`<p class="err">${missed} photo${missed===1?'':'s'} didn’t upload — add them later from Commissioner → Golfers.</p>`:''}<p class="note">Commissioner PIN: <b>${esc(cfg.pin)}</b>. More → Commissioner → unlock → Setup for the checklist.</p><label>Text this to the group<textarea rows="6" readonly>${esc(invite)}</textarea></label><button type="button" class="btn ghost wide" data-act="copy" data-v="${esc(invite)}">Copy the invite</button></section>`;
+  out.innerHTML=`<section class="done"><p class="k">It’s live</p><h2>${esc(state.tournament.name)}</h2><a class="btn wide big" href="${url}">Open your site →</a>${missed?`<p class="err">${missed} photo${missed===1?'':'s'} didn’t upload — add them later from Commissioner → Golfers.</p>`:''}${payOn?`<div class="cardstep"><p class="k">Last step</p><h3>Add a card to start your free week</h3><p class="note">Nothing is charged today. Keep it past day 7 and your card is charged ${cfg.tier==='weekend'?'$99':'$149 (then yearly — cancel any time)'}. Cancel before then and you pay nothing.</p><button type="button" class="btn wide big" data-act="payFromForm">💳 Add a card — secure checkout by Stripe</button></div>`:''}<p class="note">Commissioner PIN: <b>${esc(cfg.pin)}</b>. More → Commissioner → unlock → Setup for the checklist.</p><label>Text this to the group<textarea rows="6" readonly>${esc(invite)}</textarea></label><button type="button" class="btn ghost wide" data-act="copy" data-v="${esc(invite)}">Copy the invite</button></section>`;
   try{ localStorage.removeItem('fairwaze-new'); }catch(e){}
  }catch(e){ out.innerHTML='<p class="err">No connection. Try again.</p>'; }
 }
@@ -1154,11 +1166,13 @@ document.addEventListener('click',async e=>{ const el=e.target.closest('[data-ac
  else if(act==='delR'){ cfg.rounds.splice(Number(el.dataset.i),1); view(); }
  else if(act==='tag'){ cfg.tagline=el.dataset.v; view(); }
  else if(act==='build'){ build(); }
+ else if(act==='payFromForm'){ el.disabled=true; el.textContent='Opening checkout…'; try{ const r=await fetch('/api/pay',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:cfg.slug,pin:cfg.pin,tier:cfg.tier})}); if(!r.ok){ el.textContent=r.status===503?'Payments open soon — carry on':'Couldn’t open checkout — try again from your site'; return; } location.href=(await r.json()).url; }catch(e){ el.textContent='No connection — try from the site'; } }
  else if(act==='copy'){ try{ await navigator.clipboard.writeText(el.dataset.v); el.textContent='Copied'; }catch(e){} }
 });
 document.addEventListener('change',async e=>{ const el=e.target; if(el.dataset&&el.dataset.photo!==undefined&&el.files&&el.files[0]){ read(); const i=Number(el.dataset.photo); try{ cfg.players[i].photo=await shrink(el.files[0]); }catch(err){ alert('Couldn’t read that photo'); } view(); } });
 document.addEventListener('input',e=>{ if(e.target.id==='s-slug'){ read(); clearTimeout(window._slugT); window._slugT=setTimeout(checkSlug,400); } if(e.target.id==='f-name'&&!cfg.slug){ /* suggest a link later */ } });
 try{ const saved=JSON.parse(localStorage.getItem('fairwaze-new')||'null'); if(saved&&saved.name!==undefined) Object.assign(cfg,saved); }catch(e){}
+fetch('/api/pay?slug=_',{cache:'no-store'}).then(r=>r.json()).then(j=>{ window.PAY_ON=!!j.configured; if(step===STEPS.length-1) view(); }).catch(()=>{});
 try{ const t=new URLSearchParams(location.search).get('tier'); if(t==='season'||t==='weekend') cfg.tier=t; }catch(e){}
 view();
 

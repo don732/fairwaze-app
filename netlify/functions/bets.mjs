@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { paywall } from "../lib/billing.mjs";
 import { storeFor, pinOk, tripOf, setTrip } from "../lib/trip.mjs";
 import { webcrypto as crypto } from "node:crypto";
 import { notify } from "../lib/push.mjs";
@@ -12,6 +13,7 @@ const TYPES = new Set(["create", "accept", "decline", "join", "leave", "cancel",
 
 export default async (req, context) => {
   setTrip(tripOf(req));
+  if (req.method !== "GET" && req.method !== "HEAD") { const pw = await paywall(tripOf(req)); if (pw) return pw; }
   const store = storeFor(req, "myrtle-bets");
 
   if (req.method === "GET") {
