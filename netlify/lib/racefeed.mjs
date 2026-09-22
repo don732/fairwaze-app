@@ -2,10 +2,12 @@ import { getStore } from "@netlify/blobs";
 import { tripStore } from "./trip.mjs";
 
 const r2 = (n) => Math.round(n * 100) / 100;
-const money = (v) => "$" + (Math.round(v * 100) / 100).toFixed(v % 1 ? 2 : 0);
+const cash = (v) => "$" + (Math.round(v * 100) / 100).toFixed(v % 1 ? 2 : 0);
+const downs = (v) => { const n = Math.round(v * 10) / 10; return `${n.toFixed(n % 1 ? 1 : 0)} Down${Math.abs(n) === 1 ? "" : "s"}`; };
 
 // rebuild one race from the event log and describe how the money moved
-export function raceSummary(events, raceId, names = {}) {
+export function raceSummary(events, raceId, names = {}, inDowns = true) {
+  const money = inDowns ? downs : cash;
   const create = events.find((e) => e.id === raceId && e.type === "create");
   const start = events.find((e) => e.bet === raceId && e.type === "start");
   if (!create || !start || !Array.isArray(create.horses) || !Array.isArray(start.order)) return null;
@@ -27,7 +29,7 @@ export function raceSummary(events, raceId, names = {}) {
   const winners = tickets.filter((t) => t.horse === win);
   const losers = tickets.filter((t) => t.horse !== win);
   const head = `${h.name} (${h.odds}-1) wins it.`;
-  if (!winners.length) return `${head} Nobody had him, so everybody keeps their money.`;
+  if (!winners.length) return `${head} Nobody had him, so nothing changes hands.`;
   if (!losers.length) return `${head} Everybody was on him. Push.`;
 
   const tw = winners.reduce((s, t) => s + t.stake * h.odds, 0);

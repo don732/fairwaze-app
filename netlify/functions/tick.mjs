@@ -71,7 +71,7 @@ async function runTrip() {
     ran.push(r.id);
     try {
       const fresh = [...events, { id, at: new Date().toISOString(), type: "start", by: r.by || null, bet: r.id, order }];
-      const line = raceSummary(fresh, r.id, NAMES);
+      const line = raceSummary(fresh, r.id, NAMES, await tripDowns());
       if (line && !(await store.get("posted-" + r.id, { type: "json" }))) { await store.setJSON("posted-" + r.id, { at: new Date().toISOString() }); await postToFeed(line); }
     } catch (_) {}
     const won = (r.horses[order[0]] || {}).name || "The winner";

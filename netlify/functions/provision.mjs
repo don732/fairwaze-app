@@ -42,7 +42,8 @@ export default async (req) => {
   const photos = b.photos && typeof b.photos === "object" ? b.photos : {};
   const photoKeys = Object.keys(photos).filter((k) => /^m[a-z0-9]{4,20}$/.test(k) && typeof photos[k] === "string" && photos[k].startsWith("data:image/jpeg;base64,") && photos[k].length < 900_000).slice(0, 20);
   const email = String(b.email || "").slice(0, 120);
-  const meta = { slug, pinHash: hashPin(pin), name: String(state.tournament && state.tournament.name || slug).slice(0, 80), email, tier: b.tier === "weekend" ? "weekend" : "season", createdAt: new Date().toISOString(), paid: false, trialUsed: false, grandfathered: !billingOn(), players: state.players.length, rounds: state.rounds.length };
+  const agree = b.agree && typeof b.agree === "object" ? { at: String(b.agree.at || "").slice(0, 40), by: String(b.agree.by || "").slice(0, 80), email: String(b.agree.email || "").slice(0, 120) } : null;
+  const meta = { slug, agree, pinHash: hashPin(pin), name: String(state.tournament && state.tournament.name || slug).slice(0, 80), email, tier: b.tier === "weekend" ? "weekend" : "season", createdAt: new Date().toISOString(), paid: false, trialUsed: false, grandfathered: !billingOn(), players: state.players.length, rounds: state.rounds.length };
   await getStore({ name: "fairwaze-trips", consistency: "strong" }).setJSON("trip-" + slug, meta);
   setTrip(slug);
   const st = tripStore("myrtle-championship");

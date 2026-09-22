@@ -725,6 +725,7 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 
 .wiz{max-width:720px;margin:0 auto;padding:14px 14px 60px;color:var(--cream)}
 .wz-head h1{font:400 clamp(34px,9vw,56px)/1 var(--disp);margin:4px 0 8px;text-shadow:4px 4px 0 #000}
@@ -762,6 +763,7 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .roll{display:inline-block;width:auto;margin:6px 0 4px;padding:6px 12px}.rollall{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:4px 0 6px}.rollall .btn{width:auto;display:inline-block;padding:6px 12px}.rollall .note{margin:0}
 /* the form scrolls like a normal page (the app pins itself to the screen; the form must not) */
 html,body{height:auto!important;min-height:100%;overflow:auto!important;overscroll-behavior:auto}
+.chk.agree{display:flex;gap:10px;align-items:flex-start;text-transform:none;font:600 14px/1.35 var(--body);color:#d8cfb3;background:#000;border:2px solid #333;padding:10px;margin:14px 0 6px}.chk.agree input{margin-top:3px;flex:none;width:20px;height:20px}
 .wz-help{margin:28px 0 0;padding:14px;border:3px solid #000;background:#000;text-align:center}.wz-help p{margin:0 0 6px;font-weight:700;color:#d8cfb3}.wz-help .wz-contact{font-size:17px}
 </style></head><body><form name="signup" data-netlify="true" netlify-honeypot="bot-field" hidden><input name="event"><input name="link"><input name="plan"><input name="commissioner"><input name="email"><input name="mobile"><input name="venmo"><input name="golfers"><input name="first_round"><input name="again"><input name="bot-field"></form><div id="app"></div><script>
 /* ===== ENGINE START ===== */
@@ -804,7 +806,7 @@ const SCRAMBLE_RULES = (size, label)=>[
 function defaultState(){
  return {
   v:1,
-  tournament:{name:'THE MYRTLE BEACH CHAMPIONSHIP', short:'Myrtle', year:2026, countN:4, kind:'trip', themeTitle:'Make It Rain Birdies', themeBy:'The official anthem', fee:160, feeRule:'loser', commissionerId:'don', taxOn:true, taxRate:2.5, taxCap:25, taxFrom:'', demoUrl:'https://demo.fairwaze.app', dates:'October 22–24, 2026', area:'Myrtle Beach / Calabash / Pawleys Island', start:'2026-10-22T12:39:00-04:00', heroMode:'auto'},
+  tournament:{name:'THE MYRTLE BEACH CHAMPIONSHIP', short:'Myrtle', year:2026, countN:4, kind:'trip', themeTitle:'Make It Rain Birdies', themeBy:'The official anthem', stakes:'cash', fee:160, feeRule:'loser', commissionerId:'don', taxOn:true, taxRate:2.5, taxCap:25, taxFrom:'', demoUrl:'https://demo.fairwaze.app', dates:'October 22–24, 2026', area:'Myrtle Beach / Calabash / Pawleys Island', start:'2026-10-22T12:39:00-04:00', heroMode:'auto'},
   pinHash:null,
   players: PLAYERS0.map(p=>({...p,nick:'',drink:'',strength:'',weakness:'',scout:'',likely:'',photo:null,crop:{x:50,y:35,z:100},treatment:'comic'})),
   frozen:null,
@@ -1045,7 +1047,7 @@ function stateFromConfig(cfg){
  return {
   v:1,
   tournament:{name:String(cfg.name||'THE CHAMPIONSHIP').toUpperCase(),short:cfg.short||(cfg.name||'').split(' ')[0]||'The trip',year:yr,countN:Math.max(1,Math.min(rounds.length,Number(cfg.countN)||Math.max(1,rounds.length-1))),kind:cfg.kind||'trip',
-   themeTitle:cfg.themeTitle||'',themeBy:cfg.themeBy||'',fee:Number(cfg.fee)||(cfg.feeRule==='loser'?(cfg.tier==='weekend'?99:149):0),feeRule:cfg.feeRule||'off',taxOn:cfg.taxOn!==false,taxRate:Number(cfg.taxRate)||2.5,taxCap:Number(cfg.taxCap)||25,taxFrom:cfg.taxFrom||new Date().toISOString().slice(0,10),commissionerId:commish?commish.id:'',
+   themeTitle:cfg.themeTitle||'',themeBy:cfg.themeBy||'',stakes:cfg.stakes==='points'?'points':'cash',fee:Number(cfg.fee)||(cfg.feeRule==='loser'?(cfg.tier==='weekend'?99:149):0),feeRule:cfg.feeRule||'off',taxOn:cfg.taxOn!==false,taxRate:Number(cfg.taxRate)||2.5,taxCap:Number(cfg.taxCap)||25,taxFrom:cfg.taxFrom||new Date().toISOString().slice(0,10),commissionerId:commish?commish.id:'',
    dates:cfg.dates||'',area:cfg.area||'',start:startISO,heroMode:'auto',tagline:cfg.tagline||'',founded:Number(cfg.founded)||null},
   pinHash:null,players,frozen:null,rounds,
   adjustments:[],audit:[{at:new Date().toISOString(),action:'Trip created',detail:'from the intake form'}],tiebreak:[],hall,media:players.filter(p=>p.photo).map(p=>({id:p.photo,caption:p.first,treatment:'comic',slot:'portrait'})),lastEvent:null,punishments,
@@ -1059,7 +1061,7 @@ function stateFromConfig(cfg){
 const CONTACT='dfrazier@fairwaze.app';
 const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const cfg={kind:'trip',name:'',tagline:'',dates:'',area:'',tier:'season',players:[],rounds:[],commissioner:{first:'',last:'',email:'',mobile:'',venmo:''},countN:'',allow:100,offLow:true,fee:0,feeRule:'off',punishments:[],pastChampions:[],memorial:{name:'',text:''},sponsors:[],slug:'',pin:''};
+const cfg={kind:'trip',stakes:'cash',agree:false,name:'',tagline:'',dates:'',area:'',tier:'season',players:[],rounds:[],commissioner:{first:'',last:'',email:'',mobile:'',venmo:''},countN:'',allow:100,offLow:true,fee:0,feeRule:'off',punishments:[],pastChampions:[],memorial:{name:'',text:''},sponsors:[],slug:'',pin:''};
 for(let i=0;i<8;i++) cfg.players.push({first:'',last:'',hi:'',venmo:'',mobile:'',founding:false,defending:false,bio:''});
 cfg.rounds.push({nick:'',course:'',date:'',tee:'',format:'scramble',teamSize:4});
 const FUN_TAGS=['Run your trip like a major.','Three days to determine something nobody else cares about.','Mathematically alive.','Bring cash. Bring excuses.'];
@@ -1163,6 +1165,8 @@ function view(){
   `<label>Rounds that count toward the championship<input id="r-count" inputmode="numeric" placeholder="${Math.max(1,cfg.rounds.length-1)} (best ${Math.max(1,cfg.rounds.length-1)} of ${cfg.rounds.length})" value="${esc(cfg.countN)}"></label>
    <label>Shamble handicap allowance (%)<input id="r-allow" inputmode="numeric" value="${esc(cfg.allow)}"></label>
    <label class="chk"><input id="r-offlow" type="checkbox" ${cfg.offLow?'checked':''}> Strokes off the low man (low handicap plays scratch)</label>
+   <label>What your games are played for<select id="r-stakes"><option value="cash" ${cfg.stakes!=='points'?'selected':''}>Dollars — the group settles up on Venmo</option><option value="points" ${cfg.stakes==='points'?'selected':''}>Points — nobody pays anybody</option></select></label>
+   <p class="note">Either way, Fairwazekeeps the tally. It never holds, moves or processes anyone's money.</p>
    <label>App fee rule<select id="r-feerule"><option value="off" ${cfg.feeRule==='off'?'selected':''}>Nobody — it’s covered</option><option value="loser" ${cfg.feeRule==='loser'?'selected':''}>Last place pays (and it’s a slice on the Wheel of Misfortune)</option></select></label>
    <label>App fee amount ($)<input id="r-fee" inputmode="numeric" placeholder="${cfg.tier==='weekend'?99:149}" value="${esc(cfg.fee||'')}"></label>
    <label class="chk"><input id="r-taxon" type="checkbox" ${cfg.taxOn!==false?'checked':''}> Bystander Tax — every day before the trip with no bet, post or duel costs a guy money. The pot goes to the commissioner, to do with as he sees fit.</label>
@@ -1175,6 +1179,7 @@ function view(){
    <label>Commissioner PIN (4–8 digits)<input id="s-pin" inputmode="numeric" maxlength="8" value="${esc(cfg.pin)}"></label>
    <p class="note">This PIN unlocks scoring, settings and the setup checklist. Only you get it.</p>
    ${preview()}
+   <label class="chk agree"><input id="s-agree" type="checkbox" ${cfg.agree?'checked':''}> I’m 18 or older, and our group’s games are among friends, for fun, and legal where we play. Fairwaze keeps score — it doesn’t run the games, take a cut, or handle anyone’s money.</label>
    <button type="button" class="btn wide big" data-act="build">🏌️ Build my site</button><p class="note">${window.PAY_ON?'Free for 7 days. You’ll add a card next — nothing is charged unless you keep it past day 7.':'Nothing is charged here.'}</p>`
  ][step];
  const contact=`<a class="wz-contact" href="mailto:${CONTACT}?subject=${encodeURIComponent('Fairwaze question')}&body=${encodeURIComponent('Hi — I have a question about setting up Fairwaze for my group.\n\n')}">Questions? Contact us</a>`;
@@ -1186,9 +1191,9 @@ function read(){
  if(g('c-first')!==undefined){ cfg.commissioner={first:g('c-first'),last:g('c-last'),email:g('c-email'),mobile:g('c-mobile'),venmo:g('c-venmo')}; }
  $$('[data-p]').forEach(el=>{ const p=cfg.players[Number(el.dataset.p)]; if(!p) return; p[el.dataset.k]=el.type==='checkbox'?el.checked:el.value; });
  $$('[data-r]').forEach(el=>{ const r=cfg.rounds[Number(el.dataset.r)]; if(!r) return; r[el.dataset.k]=el.value; });
- if(g('r-count')!==undefined){ cfg.countN=g('r-count'); cfg.allow=Number(g('r-allow'))||100; cfg.offLow=document.getElementById('r-offlow').checked; cfg.feeRule=g('r-feerule'); cfg.fee=Number(g('r-fee'))||0; cfg.taxOn=document.getElementById('r-taxon').checked; cfg.taxRate=Number(g('r-taxrate'))||2.5; cfg.taxCap=Number(g('r-taxcap'))||25; }
+ if(g('r-count')!==undefined){ cfg.countN=g('r-count'); cfg.allow=Number(g('r-allow'))||100; cfg.offLow=document.getElementById('r-offlow').checked; cfg.stakes=g('r-stakes')==='points'?'points':'cash'; cfg.feeRule=g('r-feerule'); cfg.fee=Number(g('r-fee'))||0; cfg.taxOn=document.getElementById('r-taxon').checked; cfg.taxRate=Number(g('r-taxrate'))||2.5; cfg.taxCap=Number(g('r-taxcap'))||25; }
  if(g('x-pun')!==undefined){ cfg.punishments=g('x-pun').split('\n').map(s=>s.trim()).filter(Boolean); cfg.pastChampions=g('x-hall').split('\n').map(s=>s.trim()).filter(Boolean).map(l=>{ const m=/^(\d{4})\s+(.+)$/.exec(l); return m?{year:Number(m[1]),name:m[2]}:{year:'',name:l}; }); cfg.memorial={name:g('x-memname'),text:g('x-memtext')}; cfg.sponsors=g('x-spon').split('\n').map(s=>s.trim()).filter(Boolean); }
- if(g('s-slug')!==undefined){ cfg.slug=slugify(g('s-slug')); cfg.pin=g('s-pin'); }
+ if(g('s-slug')!==undefined){ cfg.slug=slugify(g('s-slug')); cfg.pin=g('s-pin'); const ag=document.getElementById('s-agree'); if(ag) cfg.agree=ag.checked; }
  try{ localStorage.setItem('fairwaze-new',JSON.stringify({...cfg,players:cfg.players.map(p=>({...p,photo:p.photo&&p.photo.length<200000&&cfg.players.length<=24?p.photo:''}))})); }catch(e){}
 }
 function validate(){
@@ -1211,12 +1216,12 @@ async function build(){
  try{ await buildInner(); } finally { building=false; const b2=document.querySelector('[data-act=build]'); if(b2){ b2.disabled=false; b2.textContent='🏌️ Build my site'; } }
 }
 async function buildInner(){
- read(); const out=$('#out'); const err=[]; if(!cfg.name.trim()) err.push('event name'); if(cfg.players.filter(p=>p.first.trim()).length<2) err.push('two golfers'); if(!cfg.rounds.some(r=>r.course.trim())) err.push('a round'); if(!/^\d{4,8}$/.test(cfg.pin)) err.push('a 4–8 digit PIN'); if(!cfg.slug||cfg.slug.length<3) err.push('a link');
+ read(); const out=$('#out'); const err=[]; if(!cfg.name.trim()) err.push('event name'); if(cfg.players.filter(p=>p.first.trim()).length<2) err.push('two golfers'); if(!cfg.rounds.some(r=>r.course.trim())) err.push('a round'); if(!/^\d{4,8}$/.test(cfg.pin)) err.push('a 4–8 digit PIN'); if(!cfg.agree) err.push('the box ticked below'); if(!cfg.slug||cfg.slug.length<3) err.push('a link');
  if(err.length){ out.innerHTML=`<p class="err">Still need: ${err.join(', ')}.</p>`; return; }
  if(!(await checkSlug())){ out.innerHTML='<p class="err">Pick a different link.</p>'; return; }
  out.innerHTML='<p class="note">Building…</p>';
  const built=buildConfig(); const state=stateFromConfig(built);
- try{ const r=await fetch('/api/provision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:cfg.slug,pin:cfg.pin,state,photos:{},email:cfg.commissioner.email,tier:cfg.tier})});
+ try{ const r=await fetch('/api/provision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:cfg.slug,pin:cfg.pin,state,photos:{},email:cfg.commissioner.email,tier:cfg.tier,agree:{at:new Date().toISOString(),by:((cfg.commissioner.first||'')+' '+(cfg.commissioner.last||'')).trim(),email:cfg.commissioner.email||''}})});
   if(!r.ok){ out.innerHTML=`<p class="err">${esc(await r.text())}</p>`; return; }
   const j=await r.json(); const url=location.origin+j.url;
   let payOn=false; try{ const ps=await (await fetch('/api/pay?slug='+encodeURIComponent(cfg.slug),{cache:'no-store'})).json(); payOn=!!ps.configured; }catch(e){}

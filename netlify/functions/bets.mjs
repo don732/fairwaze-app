@@ -11,6 +11,18 @@ const ID = /^[a-z][a-z0-9]{0,15}$/;
 const EVID = /^[0-9a-z-]{6,40}$/i;
 const TYPES = new Set(["create", "accept", "decline", "join", "leave", "cancel", "void", "settle", "unsettle", "hole", "press", "concede", "scrap", "wager", "start"]);
 
+
+// does this trip's race pay in Downs or in dollars?
+async function tripDowns(req) {
+  try {
+    const st = req ? storeFor(req, "myrtle-championship") : tripStore("myrtle-championship");
+    const raw = await st.get("mbc26-state");
+    if (!raw) return true;
+    const s = JSON.parse(raw);
+    return ((s.tournament && s.tournament.raceStakes) || "downs") !== "cash";
+  } catch (_) { return true; }
+}
+
 export default async (req, context) => {
   setTrip(tripOf(req));
   if (req.method !== "GET" && req.method !== "HEAD") { const pw = await paywall(tripOf(req)); if (pw) return pw; }
@@ -142,7 +154,7 @@ export default async (req, context) => {
       try {
         const { blobs } = await store.list({ prefix: "ev-" });
         const all = (await Promise.all(blobs.map((b2) => store.get(b2.key, { type: "json" })))).filter(Boolean);
-        const line = raceSummary(all, e.bet, names);
+        const line = raceSummary(all, e.bet, names, await tripDowns(req));
         if (line && !(await store.get("posted-" + e.bet, { type: "json" }))) { await store.setJSON("posted-" + e.bet, { at: new Date().toISOString() }); await postToFeed(line); }
       } catch (_) {}
     } else if (ev.type === "create" && ev.kind === "h2h" && ev.opp) {

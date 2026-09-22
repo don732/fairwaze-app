@@ -726,6 +726,21 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+
+.downsboard .dbl{display:grid;gap:6px;margin-top:6px}
+.dbr{display:flex;align-items:center;gap:10px;background:#000;border:2px solid #333;border-left:6px solid var(--amber);padding:7px 10px}
+.dbr .dbp{font:800 12px var(--cond);color:#8a8367;width:16px}.dbr b{flex:1;font:400 19px var(--disp);color:var(--cream)}
+.dbr em{font-style:normal;font:800 15px var(--cond)}.dbr.up em{color:var(--lime)}.dbr.down em{color:#ff9d93}
+
+.rulescard{border-left:8px solid var(--amber);cursor:pointer}
+.rulescard h3{font:400 24px var(--disp);margin:2px 0 4px}
+.rules{background:var(--paper);color:#000;border:3px solid #000;box-shadow:6px 6px 0 #000;padding:14px;margin:10px 0}
+.rules-lede{font-weight:700;font-size:17px;margin:0 0 10px}
+.rules-list{margin:0;padding-left:20px}
+.rules-list li{margin:0 0 10px;font-weight:600;line-height:1.35}
+.rules-list li b{display:block;font:400 20px var(--disp);margin-bottom:2px}
+.rules .note{color:#6b6450}
 </style></head><body><div id="app"><p style="text-align:center;padding:40vh 0;font-family:serif">Raking the bunkers…</p></div><div id="toast" role="status" aria-live="polite"></div>
 <script>if(!/^\/t\/[a-z0-9-]{3,32}/i.test(location.pathname)){ location.replace('/home'); }</script><script>
 /* ===== ENGINE START ===== */
@@ -768,7 +783,7 @@ const SCRAMBLE_RULES = (size, label)=>[
 function defaultState(){
  return {
   v:1,
-  tournament:{name:'THE MYRTLE BEACH CHAMPIONSHIP', short:'Myrtle', year:2026, countN:4, kind:'trip', themeTitle:'Make It Rain Birdies', themeBy:'The official anthem', fee:160, feeRule:'loser', commissionerId:'don', taxOn:true, taxRate:2.5, taxCap:25, taxFrom:'', demoUrl:'https://demo.fairwaze.app', dates:'October 22–24, 2026', area:'Myrtle Beach / Calabash / Pawleys Island', start:'2026-10-22T12:39:00-04:00', heroMode:'auto'},
+  tournament:{name:'THE MYRTLE BEACH CHAMPIONSHIP', short:'Myrtle', year:2026, countN:4, kind:'trip', themeTitle:'Make It Rain Birdies', themeBy:'The official anthem', stakes:'cash', raceStakes:'cash', fee:160, feeRule:'loser', commissionerId:'don', taxOn:true, taxRate:2.5, taxCap:25, taxFrom:'', demoUrl:'https://demo.fairwaze.app', dates:'October 22–24, 2026', area:'Myrtle Beach / Calabash / Pawleys Island', start:'2026-10-22T12:39:00-04:00', heroMode:'auto'},
   pinHash:null,
   players: PLAYERS0.map(p=>({...p,nick:'',drink:'',strength:'',weakness:'',scout:'',likely:'',photo:null,crop:{x:50,y:35,z:100},treatment:'comic'})),
   frozen:null,
@@ -1009,7 +1024,7 @@ function stateFromConfig(cfg){
  return {
   v:1,
   tournament:{name:String(cfg.name||'THE CHAMPIONSHIP').toUpperCase(),short:cfg.short||(cfg.name||'').split(' ')[0]||'The trip',year:yr,countN:Math.max(1,Math.min(rounds.length,Number(cfg.countN)||Math.max(1,rounds.length-1))),kind:cfg.kind||'trip',
-   themeTitle:cfg.themeTitle||'',themeBy:cfg.themeBy||'',fee:Number(cfg.fee)||(cfg.feeRule==='loser'?(cfg.tier==='weekend'?99:149):0),feeRule:cfg.feeRule||'off',taxOn:cfg.taxOn!==false,taxRate:Number(cfg.taxRate)||2.5,taxCap:Number(cfg.taxCap)||25,taxFrom:cfg.taxFrom||new Date().toISOString().slice(0,10),commissionerId:commish?commish.id:'',
+   themeTitle:cfg.themeTitle||'',themeBy:cfg.themeBy||'',stakes:cfg.stakes==='points'?'points':'cash',raceStakes:'downs',fee:Number(cfg.fee)||(cfg.feeRule==='loser'?(cfg.tier==='weekend'?99:149):0),feeRule:cfg.feeRule||'off',taxOn:cfg.taxOn!==false,taxRate:Number(cfg.taxRate)||2.5,taxCap:Number(cfg.taxCap)||25,taxFrom:cfg.taxFrom||new Date().toISOString().slice(0,10),commissionerId:commish?commish.id:'',
    dates:cfg.dates||'',area:cfg.area||'',start:startISO,heroMode:'auto',tagline:cfg.tagline||'',founded:Number(cfg.founded)||null},
   pinHash:null,players,frozen:null,rounds,
   adjustments:[],audit:[{at:new Date().toISOString(),action:'Trip created',detail:'from the intake form'}],tiebreak:[],hall,media:players.filter(p=>p.photo).map(p=>({id:p.photo,caption:p.first,treatment:'comic',slot:'portrait'})),lastEvent:null,punishments,
@@ -1084,6 +1099,7 @@ async function checkVersion(){
 }
 /* ===== BILLING: free week, then pay (Stripe) ===== */
 let billing=null;
+let rulesSeen=false;
 async function loadBilling(){
  if(LEGACY||storageMode!=='netlify') return;
  try{ const r=await fetch('/api/pay?slug='+encodeURIComponent(TRIP),{cache:'no-store'}); if(r.ok){ billing=await r.json(); render(); } }catch(e){}
@@ -1135,7 +1151,7 @@ function storageBanner(){
 }
 async function sha(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('mbc26:'+s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-const BUILD=134;
+const BUILD=139;
 let updateReady=false;
 let ROUTE='home';
 const scroller=()=>document.getElementById('scroller');
@@ -1330,7 +1346,7 @@ function render(force){
  rendering=true;
  const route=ROUTE;
  const [v,arg]=route.split('/');
- const views={home,board,rounds:roundsList,round:()=>roundPage(Number(arg)),players:playersList,player:()=>playerPage(arg),memorial:()=>memorialPage(arg),feed:feedPage,bets:betsPage,about:aboutPage,roulette:roulettePage,games:gamesPage,duel:duelPage,open:openPage,race:racePage,misfortune:misfortunePage,gulp:gulpPage,recap:()=>recapPage(arg),scenarios,mates,hall,founders:foundersPage,more,admin:()=>adminPage(arg||'scores')};
+ const views={home,board,rounds:roundsList,round:()=>roundPage(Number(arg)),players:playersList,player:()=>playerPage(arg),memorial:()=>memorialPage(arg),feed:feedPage,bets:betsPage,about:aboutPage,roulette:roulettePage,games:gamesPage,duel:duelPage,open:openPage,race:racePage,misfortune:misfortunePage,gulp:gulpPage,recap:()=>recapPage(arg),scenarios,mates,hall,founders:foundersPage,more,rules:houseRules,admin:()=>adminPage(arg||'scores')};
  const rawFn=views[v]||home;
  const fn=()=>{ try{ return rawFn(); }
   catch(err){ lastRenderError={route,msg:(err&&err.message)||String(err),stack:(err&&err.stack||'').split('\n').slice(0,3).join(' | ')};
@@ -1417,7 +1433,7 @@ function home(){
  const during=isLive()||(lastRound(S).status==='final'&&Date.now()-Date.parse(lastRound(S).finalizedAt||0)<2*864e5);
  const lead=during?(slot==='morning'?nextRoundCard():slot==='night'?feedStrip():''):'';
  const rest=during?(slot==='morning'?`<div class="home-grid"><div>${recapCard()}${roundsStrip()}</div><div>${feedStrip()}</div></div>`:slot==='night'?`<div class="home-grid"><div>${recapCard()}${nextRoundCard()}${roundsStrip()}</div></div>`:`<div class="home-grid"><div>${recapCard()}${nextRoundCard()}${roundsStrip()}</div><div>${feedStrip()}</div></div>`):`<div class="home-grid"><div>${recapCard()}${nextRoundCard()}${roundsStrip()}</div><div>${feedStrip()}</div></div>`;
- return themePlayer()+feeCard()+trophyPrompt()+sotdCard()+(lead?`<section class="daypart ${slot}">${lead}</section>`:'')+`<div class="home-top ${isLive()?'two':''}"><div class="ht-main">${hero}</div>${isLive()?`<aside class="ht-side">${leaderStrips()}</aside>`:''}</div>`+groupPanel() + rest + featureSlots();
+ return rulesCard()+themePlayer()+feeCard()+trophyPrompt()+sotdCard()+(lead?`<section class="daypart ${slot}">${lead}</section>`:'')+`<div class="home-top ${isLive()?'two':''}"><div class="ht-main">${hero}</div>${isLive()?`<aside class="ht-side">${leaderStrips()}</aside>`:''}</div>`+groupPanel() + rest + featureSlots();
 }
 function roundsStrip(){ return `<section><h2 class="sec">The card</h2><div class="rstrip">${S.rounds.map(r=>`<div role="link" tabindex="0" data-nav="round/${r.n}" class="rs ${r.status}"><b>R${r.n}</b><span>${esc(r.nick)}</span><small>${esc(r.course)}</small><em>${r.status==='final'?'FINAL':esc(r.tee)}</em></div>`).join('')}</div></section>`; }
 
@@ -1868,7 +1884,10 @@ const teamOfIn=(r,id)=>r&&r.teams.find(t=>t.members.includes(id));
 const plays=(r,id)=>!!teamOfIn(r,id)&&!isDnp(r,id);
 const roundOpen=(n,at)=>{ const r=n==='champ'?lastRound(S):roundBy(n); if(r.status!=='final') return true; return !r.finalizedAt||!!(at&&at<r.finalizedAt); };
 const teamBetOK=r=>r.teams.length===2&&r.locked&&r.status!=='final';
-const money=v=>'$'+(Math.round(v*100)/100).toFixed(v%1?2:0);
+const POINTS=()=>((S.tournament&&S.tournament.stakes)==='points');
+const RACE_DOWNS=()=>(((S.tournament&&S.tournament.raceStakes)||(LEGACY?'cash':'downs'))!=='cash');
+const downs=v=>{ if(!RACE_DOWNS()) return money(v); const n=Math.round(v*10)/10; return `${n.toFixed(n%1?1:0)} Down${Math.abs(n)===1?'':'s'}`; };
+const money=v=>{ const n=Math.round(v*100)/100; return POINTS()?`${n.toFixed(n%1?1:0)} pt${Math.abs(n)===1?'':'s'}`:'$'+n.toFixed(n%1?2:0); };
 function betState(){
  const bets={};
  const key=e=>String(e.at||'')+'|'+String(e.id||'');
@@ -1980,7 +1999,7 @@ function betOutcome(b){
   const win=b.order[0], h=b.horses[win];
   const winners=tickets.filter(t=>t.horse===win), losers=tickets.filter(t=>t.horse!==win);
   const pot=r2(losers.reduce((s,t)=>s+t.stake,0));
-  if(!winners.length) return {st:'done',note:`${h.name} (${h.odds}-1) wins it. Nobody backed him, so everybody keeps their money.`,transfers:[]};
+  if(!winners.length) return {st:'done',note:`${h.name} (${h.odds}-1) wins it. Nobody backed him, so nothing changes hands.`,transfers:[]};
   if(!losers.length) return {st:'push',note:`${h.name} (${h.odds}-1) wins it, but everybody was on him. Push.`};
   const tw=winners.reduce((s,t)=>s+t.stake*h.odds,0);
   const transfers=[];
@@ -1988,7 +2007,7 @@ function betOutcome(b){
   const whoWon=[...new Set(winners.map(t=>t.by))];
   const moved=r2(transfers.reduce((s,t)=>s+t.amt,0));
   if(!moved) return {st:'push',note:`${h.name} (${h.odds}-1) wins it. Every ticket belonged to the same guy, so nothing changes hands.`,transfers:[]};
-  return {st:'done',winners:whoWon,note:`${h.name} (${h.odds}-1) wins. ${names(whoWon)} ${whoWon.length>1?'split':'takes'} ${money(moved)}.`,transfers};
+  return {st:'done',winners:whoWon,note:`${h.name} (${h.odds}-1) wins. ${names(whoWon)} ${whoWon.length>1?'split':'takes'} ${downs(moved)}.`,transfers,downs:true};
  }
  if(b.kind==='duel'&&b.scrap&&b.scrap.length>=2) return {st:'void',note:'Both of you scrapped it. No action.'};
  if(b.kind==='duel'&&b.conceded){
@@ -2061,6 +2080,7 @@ function settleEvents(){
  return BETEV.filter(e=>e.type==='settle'&&!undone.has(e.id)).sort((a,b)=>a.at<b.at?1:-1);
 }
 function settleUp(bets){
+ if(RACE_DOWNS()) bets=(bets||[]).filter(b=>b.kind!=='race');   // Downs never hit the money ledger; dollar races do
  const net={}; bets.forEach(b=>(b.out.transfers||[]).forEach(t=>{ net[t.from]=(net[t.from]||0)-t.amt; net[t.to]=(net[t.to]||0)+t.amt; }));
  try{ taxTransfers().forEach(t=>{ net[t.from]=(net[t.from]||0)-t.amt; net[t.to]=(net[t.to]||0)+t.amt; }); }catch(e){}
  settleEvents().forEach(s=>{ net[s.from]=(net[s.from]||0)+Number(s.amt); net[s.to]=(net[s.to]||0)-Number(s.amt); });
@@ -2126,7 +2146,7 @@ function betComposer(me){
   <div class="seg"><button class="${d.type==='h2h'?'on':''}" data-act="betType" data-v="h2h">Me vs a guy</button><button class="${d.type==='team'?'on':''}" data-act="betType" data-v="team">Team vs team</button></div>
   ${(rounds.length||d.type==='h2h')?`<p class="k">On</p><div class="seg chips">${rounds.map(x=>`<button class="${String(d.round)===String(x.n)?'on':''}" data-act="betRound" data-v="${x.n}">R${x.n}</button>`).join('')}${d.type==='h2h'&&lastRound(S).status!=='final'?`<button class="${d.round==='champ'?'on':''}" data-act="betRound" data-v="champ">Final standings</button>`:''}</div>`:'<p class="note">No team rounds open for you right now.</p>'}
   ${body}
-  <p class="k">Stake</p><div class="seg chips stake">${[5,10,20,50].map(v=>`<button class="${d.stake===v?'on':''}" data-act="betStake" data-v="${v}">$${v}</button>`).join('')}<label class="stake-in ${[5,10,20,50].includes(d.stake)?'':'on'}"><span>$</span><input id="b-stake" inputmode="numeric" pattern="[0-9]*" placeholder="Other" value="${[5,10,20,50].includes(d.stake)?'':d.stake||''}" aria-label="Custom stake in dollars"></label></div>
+  <p class="k">Stake</p><div class="seg chips stake">${[5,10,20,50].map(v=>`<button class="${d.stake===v?'on':''}" data-act="betStake" data-v="${v}">${money(v)}</button>`).join('')}<label class="stake-in ${[5,10,20,50].includes(d.stake)?'':'on'}"><span>${POINTS()?"pts":"$"}</span><input id="b-stake" inputmode="numeric" pattern="[0-9]*" placeholder="Other" value="${[5,10,20,50].includes(d.stake)?'':d.stake||''}" aria-label="Custom stake in dollars"></label></div>
   ${ready?`<p class="bet-sum">${esc(summary)}</p><button class="btn wide big" data-act="betCreate">Throw it down</button>`:''}
  </section>`;
 }
@@ -2157,11 +2177,12 @@ function settleHTML(bets){
  const {pay}=settleUp(bets); const me=feedMe&&feedMe!=='guest'?feedMe:null; const done=settleEvents();
  const row=p=>{ let act='';
   const amt=Math.round(p.amt*100)/100;
-  if(me===p.to){ const h=vHandle(p.from); act=h?`<button class="btn sm venmo" data-act="venmo" data-txn="charge" data-from="${p.from}" data-to="${p.to}" data-amt="${amt}">Request ${money(amt)} on Venmo</button>`:`<small class="nov">${esc(F(p.from))} has no Venmo handle yet</small>`; }
+  if(POINTS()){ if(me===p.to||me===p.from) act=`<button class="btn sm" data-act="settleMark" data-from="${p.from}" data-to="${p.to}" data-amt="${amt}">Mark it squared</button>`; }
+  else if(me===p.to){ const h=vHandle(p.from); act=h?`<button class="btn sm venmo" data-act="venmo" data-txn="charge" data-from="${p.from}" data-to="${p.to}" data-amt="${amt}">Request ${money(amt)} on Venmo</button>`:`<small class="nov">${esc(F(p.from))} has no Venmo handle yet</small>`; }
   else if(me===p.from){ const h=vHandle(p.to); act=h?`<button class="btn sm venmo" data-act="venmo" data-txn="pay" data-from="${p.from}" data-to="${p.to}" data-amt="${amt}">Pay ${money(amt)} on Venmo</button>`:`<small class="nov">${esc(F(p.to))} has no Venmo handle yet</small>`; }
   return `<div class="st-row"><div class="st-line"><b>${esc(F(p.from))}</b><span>owes</span><b>${esc(F(p.to))}</b><em>${money(amt)}</em></div>${act}</div>`; };
  const myNet=me?r2((settleUp(bets).net[me]||0)):null;
- return `<h2 class="sec">Settle up</h2>${me&&pay.length?`<p class="mynet ${myNet>0?'up':myNet<0?'down':''}">${myNet>0?`You’re up ${money(myNet)} on the weekend.`:myNet<0?`You’re down ${money(-myNet)} on the weekend.`:'You’re dead even.'}</p>`:''}${pay.length?`<div class="settle">${pay.map(row).join('')}</div><p class="note">You pay the guy you lost to whenever the math allows; anything left is netted across the group, so nobody sends more than he’s down. ${me?'Buttons open Venmo with the amount and note filled in — you still hit send in Venmo.':'Pick your name above to get Venmo buttons for your money.'}</p>`:'<p class="note">All square. For now.</p>'}
+ return `<h2 class="sec">Settle up</h2>${me&&pay.length?`<p class="mynet ${myNet>0?'up':myNet<0?'down':''}">${myNet>0?`You’re up ${money(myNet)} on the weekend.`:myNet<0?`You’re down ${money(-myNet)} on the weekend.`:'You’re dead even.'}</p>`:''}${pay.length?`<div class="settle">${pay.map(row).join('')}</div><p class="note">${POINTS()?'Points only — nobody owes anybody money. Fairwaze keeps the tally; the group settles however it likes. ':'You pay the guy you lost to whenever the math allows; anything left is netted across the group, so nobody sends more than he’s down. '}${POINTS()?'':me?'Buttons open Venmo with the amount and note filled in — you still hit send in Venmo.':'Pick your name above to get Venmo buttons for your money.'}</p>`:'<p class="note">All square. For now.</p>'}
  ${done.length?`<details class="how alt sent"><summary>Sent through Venmo (${done.length})</summary><div class="biobody">${done.map(s=>`<div class="sent-row"><span>${esc(F(s.from))} → ${esc(F(s.to))} <b>${money(Number(s.amt))}</b> <small>${s.method==='charge'?'requested':'paid'} ${ago(s.at)}</small></span>${me&&(me===s.by||admin)?`<button class="lnk red" data-act="unsettle" data-id="${esc(s.id)}">Didn’t go through? Undo</button>`:''}</div>`).join('')}</div></details>`:''}`;
 }
 async function betEvent(ev,msg){
@@ -2587,7 +2608,7 @@ function duelPage(){
  <label class="whoami">Who are you?<select id="b-me"><option value="">Pick your name</option>${S.players.map(p=>`<option value="${p.id}" ${me===p.id?'selected':''}>${esc(p.first)}${claimedByOther(p.id)?' (on another phone)':''}</option>`).join('')}</select></label>${identityCard()}
  ${me?`<section class="composer bet">
   <p class="k">Call out</p><div class="seg chips">${opps.map(p=>`<button class="${duel.opp===p.id?'on':''}" data-act="duelOpp" data-v="${p.id}">${esc(p.first)}</button>`).join('')}</div>
-  <p class="k">Stake</p><div class="seg chips stake">${[5,10,20,50].map(v=>`<button class="${duel.stake===v?'on':''}" data-act="duelStake" data-v="${v}">$${v}</button>`).join('')}<label class="stake-in ${[5,10,20,50].includes(duel.stake)?'':'on'}"><span>$</span><input id="d-stake" inputmode="numeric" placeholder="Other" value="${[5,10,20,50].includes(duel.stake)?'':duel.stake||''}" aria-label="Custom stake"></label></div>
+  <p class="k">Stake</p><div class="seg chips stake">${[5,10,20,50].map(v=>`<button class="${duel.stake===v?'on':''}" data-act="duelStake" data-v="${v}">${money(v)}</button>`).join('')}<label class="stake-in ${[5,10,20,50].includes(duel.stake)?'':'on'}"><span>${POINTS()?"pts":"$"}</span><input id="d-stake" inputmode="numeric" placeholder="Other" value="${[5,10,20,50].includes(duel.stake)?'':duel.stake||''}" aria-label="Custom stake"></label></div>
   ${duel.opp?`<p class="bet-sum">${esc(F(me))} vs ${esc(F(duel.opp))} · ${money(duel.stake)} · one card each</p><button class="btn wide big" data-act="duelCreate">Throw down the gauntlet</button>`:'<p class="note">Pick somebody.</p>'}
  </section>`:'<p class="note">Pick your name to duel.</p>'}
  ${(()=>{ const sk=betState().filter(b=>b.kind==='duel'&&b.game==='skins'&&(!me||b.by===me||b.opp===me)&&['open','live'].includes(b.out.st)); return sk.length?`<div role="link" tabindex="0" data-nav="open" class="crosslink">⛳ You have ${sk.length} Imaginary Open match${sk.length>1?'es':''} waiting →</div>`:''; })()}
@@ -2641,13 +2662,13 @@ function holeCard(b,row,mePid){
  </div>`;
 }
 function myNet(b,me){ if(!me) return null; let n=0,hit=false; (b.out.transfers||[]).forEach(t=>{ if(t.from===me){ n-=t.amt; hit=true; } if(t.to===me){ n+=t.amt; hit=true; } }); return hit?r2(n):null; }
-function netChip(n){ return n==null?'':`<span class="dr-net ${n>0?'up':n<0?'down':''}">${n>0?'+':n<0?'−':''}${money(Math.abs(n))}</span>`; }
+function netChip(n,fmt){ const f=fmt||money; return n==null?'':`<span class="dr-net ${n>0?'up':n<0?'down':''}">${n>0?'+':n<0?'−':''}${f(Math.abs(n))}</span>`; }
 const FRESH_MS=10*60000;
 function raceDoneRow(b,me){
  const w=b.horses[b.order[0]]; const {pot}=raceOdds(b); const n=myNet(b,me);
  const fresh=b.startedAt&&Date.now()-Date.parse(b.startedAt)<FRESH_MS;
  const when=(()=>{ try{ const d=new Date(b.startedAt||b.at); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:ET})+' · '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:ET}); }catch(e){ return ''; } })();
- return `<details class="done-row race" ${fresh?'open':''}><summary><span class="dr-names">🏇 ${esc(w.name)} <i>${esc(oddsLabel(w.odds))}</i><small>${esc(when)}</small></span><span class="dr-res">Pot ${money(pot)}${n!=null?' ':''}${netChip(n)}</span><span class="stamp mini">OFFICIAL</span><i class="dr-plus">+</i></summary><div class="dr-body">${raceCard(b,me)}</div></details>`;
+ return `<details class="done-row race" ${fresh?'open':''}><summary><span class="dr-names">🏇 ${esc(w.name)} <i>${esc(oddsLabel(w.odds))}</i><small>${esc(when)}</small></span><span class="dr-res">Pot ${downs(pot)}${n!=null?' ':''}${netChip(n,downs)}</span><span class="stamp mini">OFFICIAL</span><i class="dr-plus">+</i></summary><div class="dr-body">${raceCard(b,me)}</div></details>`;
 }
 function betDoneRow(b,me){
  const st=b.out.st; const n=myNet(b,me); const tr=b.out.transfers||[];
@@ -2776,7 +2797,7 @@ function openPage(){
  <label class="whoami">Who are you?<select id="b-me"><option value="">Pick your name</option>${S.players.map(p=>`<option value="${p.id}" ${me===p.id?'selected':''}>${esc(p.first)}${claimedByOther(p.id)?' (on another phone)':''}</option>`).join('')}</select></label>${identityCard()}
  ${me?`<section class="composer bet">
   <p class="k">Call out</p><div class="seg chips">${opps.map(p=>`<button class="${duel.opp===p.id?'on':''}" data-act="duelOpp" data-v="${p.id}">${esc(p.first)}</button>`).join('')}</div>
-  <p class="k">Stake per skin</p><div class="seg chips stake">${[5,10,20,50].map(v=>`<button class="${duel.stake===v?'on':''}" data-act="duelStake" data-v="${v}">$${v}</button>`).join('')}<label class="stake-in ${[5,10,20,50].includes(duel.stake)?'':'on'}"><span>$</span><input id="d-stake" inputmode="numeric" placeholder="Other" value="${[5,10,20,50].includes(duel.stake)?'':duel.stake||''}" aria-label="Custom stake"></label></div>
+  <p class="k">Stake per skin</p><div class="seg chips stake">${[5,10,20,50].map(v=>`<button class="${duel.stake===v?'on':''}" data-act="duelStake" data-v="${v}">${money(v)}</button>`).join('')}<label class="stake-in ${[5,10,20,50].includes(duel.stake)?'':'on'}"><span>${POINTS()?"pts":"$"}</span><input id="d-stake" inputmode="numeric" placeholder="Other" value="${[5,10,20,50].includes(duel.stake)?'':duel.stake||''}" aria-label="Custom stake"></label></div>
   ${duel.opp?`<p class="bet-sum">${esc(F(me))} vs ${esc(F(duel.opp))} · ${money(duel.stake)} a skin</p><button class="btn wide big" data-act="duelCreate">Tee it up</button>`:'<p class="note">Pick somebody.</p>'}
  </section>`:'<p class="note">Pick your name to play.</p>'}
  ${(()=>{ const cd=betState().filter(b=>b.kind==='duel'&&b.game!=='skins'&&(!me||b.by===me||b.opp===me)&&b.out.st==='open'); return cd.length?`<div role="link" tabindex="0" data-nav="duel" class="crosslink">🃏 You have ${cd.length} high-card duel${cd.length>1?'s':''} waiting →</div>`:''; })()}
@@ -2978,7 +2999,7 @@ function raceReplay(b,auto){
   while(ci+1<calls.length&&calls[ci+1][0]<=t){ ci++; callEl.textContent=calls[ci][1]; callEl.classList.remove('pop'); void callEl.offsetWidth; callEl.classList.add('pop'); }
   if(t<1) replay.raf=requestAnimationFrame(frame);
   else { replay.raf=null; playSting('horn'); horses[b.order[0]].classList.add('win');
-   resEl.innerHTML=`<div class="stamp big">OFFICIAL</div><p class="rp-note">${esc(b.out.note||'')}</p>${(b.out.transfers||[]).length?`<p class="rp-pay">${b.out.transfers.map(x=>`${esc(F(x.from))} → ${esc(F(x.to))} ${money(x.amt)}`).join(' · ')}</p>`:''}<button class="btn wide" data-act="replayClose">Back to the track</button>`; }
+   resEl.innerHTML=`<div class="stamp big">OFFICIAL</div><p class="rp-note">${esc(b.out.note||'')}</p>${(b.out.transfers||[]).length?`<p class="rp-pay">${b.out.transfers.map(x=>`${esc(F(x.from))} → ${esc(F(x.to))} ${downs(x.amt)}`).join(' · ')}</p>`:''}<button class="btn wide" data-act="replayClose">Back to the track</button>`; }
  };
  replay.raf=requestAnimationFrame(frame);
 }
@@ -3146,7 +3167,7 @@ function setupChecks(){
   {ok:hcpsIn(r1), t:'R1 course handicaps entered', s:hcpsIn(r1)?'All seven in':'Scores → fill from H.I.', go:'admin/scores'},
   {ok:!!(r4.slope&&r4.par), t:'R4 tees picked (Crow Creek)', s:r4.slope?`${r4.teeName||'Tee'} · slope ${r4.slope}`:'Scores → pick a tee', go:'admin/scores'},
   {ok:hcpsIn(r4), t:'R4 course handicaps entered', s:hcpsIn(r4)?'All eight in':'Scores → fill from H.I.', go:'admin/scores'},
-  {ok:S.players.every(p=>vHandle(p.id)), t:'Venmo handles on file', s:`${S.players.filter(p=>vHandle(p.id)).length} of ${S.players.length}`, go:'admin/players'},
+  {ok:POINTS()||S.players.every(p=>vHandle(p.id)), t:POINTS()?'Venmo handles (not needed — points trip)':'Venmo handles on file', s:`${S.players.filter(p=>vHandle(p.id)).length} of ${S.players.length}`, go:'admin/players'},
   {ok:claimed>=S.players.length, t:'Names claimed on phones', s:`${claimed} of ${S.players.length}`, go:'more'},
   {ok:!!push.sub, t:'Your notifications on', s:push.sub?'This phone will buzz':'Feed → 🔔', go:'feed'},
   {ok:serverInfo.pushReady!==false&&!!serverInfo.lastTick&&(Date.now()-Date.parse(serverInfo.lastTick))<3*60000, t:'Server scheduler running', s:serverInfo.pushReady===false?'VAPID keys missing in Netlify':serverInfo.lastTick?`last tick ${Math.round((Date.now()-Date.parse(serverInfo.lastTick))/60000)} min ago`:'never ran — check Netlify → Functions → tick', go:'feed'},
@@ -3240,6 +3261,14 @@ const race={horse:null,stake:10,post:30,date:'',time:'',running:null,slip:{}};
 const slipFor=id=>(race.slip[id]=race.slip[id]||{});
 const slipTotal=id=>Object.values(slipFor(id)).reduce((s,v)=>s+v,0);
 const oddsLabel=o=>`${o}-1`;
+function downsBoard(){
+ if(!RACE_DOWNS()) return '';
+ const net={}; betState().filter(b=>b.kind==='race'&&b.out&&b.out.transfers).forEach(b=>b.out.transfers.forEach(t=>{ net[t.from]=r2((net[t.from]||0)-t.amt); net[t.to]=r2((net[t.to]||0)+t.amt); }));
+ const rows=Object.entries(net).filter(([,v])=>Math.abs(v)>0.004).sort((a,b)=>b[1]-a[1]);
+ if(!rows.length) return '';
+ return `<section class="composer bet downsboard"><p class="k">🏇 Downs bankroll</p><p class="note">Downs are bragging rights — they never hit Settle Up.</p>
+  <div class="dbl">${rows.map(([id,v],i)=>`<div class="dbr ${v>0?'up':'down'}"><span class="dbp">${i+1}</span><b>${esc(F(id))}</b><em>${v>0?'+':'−'}${downs(Math.abs(v))}</em></div>`).join('')}</div></section>`;
+}
 function raceOdds(b){ // live pool, purely informational
  const tix=raceTickets(b);
  const pot=r2(tix.reduce((s,t)=>s+t.stake,0));
@@ -3288,7 +3317,7 @@ function raceAutoStart(){ // any phone that's open after post time runs it
 }
 function resultLine(b){
  if(b.kind==='race'){ const h=b.horses[b.order[0]]; const net={}; (b.out.transfers||[]).forEach(t=>{ net[t.from]=r2((net[t.from]||0)-t.amt); net[t.to]=r2((net[t.to]||0)+t.amt); });
-  const parts=Object.entries(net).sort((x,y)=>y[1]-x[1]).map(([id,v])=>`${F(id)} ${v>=0?'+':'−'}${money(Math.abs(v))}`);
+  const parts=Object.entries(net).sort((x,y)=>y[1]-x[1]).map(([id,v])=>`${F(id)} ${v>=0?'+':'−'}${downs(Math.abs(v))}`);
   return parts.length?`🏇 ${h.name} (${h.odds}-1) wins it. ${parts.join(' · ')}`:`🏇 ${b.out.note}`; }
  if(b.kind==='duel') return `${b.game==='skins'?'⛳':'🃏'} ${b.out.note}`;
  return b.out.note;
@@ -3311,9 +3340,9 @@ function raceTrack(b,me){
   const p=pos(i);
   return `<div class="lane ${p===0?'win':''} ${mine?'mine':''}">
    <span class="ln">${i+1}</span>
-   <div class="lane-body"><b>${esc(h.name)}</b><small>${oddsLabel(h.odds)}${backers.length?` · ${esc(backers.join(', '))}`:''}${per[i]?` · ${money(per[i])} on him`:''}${!finished&&me?(()=>{ const onSlip=slipFor(b.id)[i]||0; const stake=(mineStake+onSlip)||race.stake; const take=raceTake(b,i,me,stake); return `${mineStake?` · <b class="pay">you: ${money(mineStake)}</b>`:''}${onSlip?` · <b class="pay slipamt">+${money(onSlip)} on the slip</b>`:''} · <b class="pay">wins ≈ ${take>0?money(take):'nothing yet'}</b>`; })():''}</small>
+   <div class="lane-body"><b>${esc(h.name)}</b><small>${oddsLabel(h.odds)}${backers.length?` · ${esc(backers.join(', '))}`:''}${per[i]?` · ${downs(per[i])} on him`:''}${!finished&&me?(()=>{ const onSlip=slipFor(b.id)[i]||0; const stake=(mineStake+onSlip)||race.stake; const take=raceTake(b,i,me,stake); return `${mineStake?` · <b class="pay">you: ${downs(mineStake)}</b>`:''}${onSlip?` · <b class="pay slipamt">+${downs(onSlip)} on the slip</b>`:''} · <b class="pay">wins ≈ ${take>0?downs(take):'nothing yet'}</b>`; })():''}</small>
     <div class="rail"><span class="pony" style="left:${finished?(p===0?'calc(100% - 26px)':`calc(${Math.max(4,96-p*11)}% - 26px)`):'0'}">🐎</span></div></div>
-   ${finished?`<span class="fin">${p===0?'WIN':p===1?'2nd':p===2?'3rd':p+1+'th'}</span>`:(me?`<span class="lane-acts"><button class="abtn go pick" data-act="racePick" data-id="${b.id}" data-h="${i}">${(slipFor(b.id)[i]||mineStake)?`+${money(race.stake)}`:'Pick'}</button>${mineStake?`<button class="lnk red" data-act="raceClear" data-id="${b.id}" data-h="${i}">✕</button>`:''}</span>`:'')}
+   ${finished?`<span class="fin">${p===0?'WIN':p===1?'2nd':p===2?'3rd':p+1+'th'}</span>`:(me?`<span class="lane-acts"><button class="abtn go pick" data-act="racePick" data-id="${b.id}" data-h="${i}">${(slipFor(b.id)[i]||mineStake)?`+${downs(race.stake)}`:'Pick'}</button>${mineStake?`<button class="lnk red" data-act="raceClear" data-id="${b.id}" data-h="${i}">✕</button>`:''}</span>`:'')}
   </div>`; }).join('')}</div>`;
 }
 function raceCard(b,me){
@@ -3322,15 +3351,15 @@ function raceCard(b,me){
  const started=!!b.order;
  const canStart=me&&!started&&raceTickets(b).length>0&&(me===b.by||admin);
  return `<article class="racecard ${started?'done':'open'}">
-  <div class="bc-top"><span class="chip">🏇 Race</span><span class="chip amber">Pot ${money(pot)}</span><span class="stamp">${started?'OFFICIAL':'BETTING OPEN'}</span></div>
+  <div class="bc-top"><span class="chip">🏇 Race</span><span class="chip amber">Pot ${downs(pot)}</span><span class="stamp">${started?'OFFICIAL':'BETTING OPEN'}</span></div>
   ${!started&&b.postAt?`<p class="postline">${esc((racePost(b)||{}).label||'')}</p>`:''}
-  ${mine.length&&!started?`<p class="bc-note">Your tickets: ${mine.map(t=>`${esc(b.horses[t.horse].name)} ${money(t.stake)} at ${oddsLabel(b.horses[t.horse].odds)}`).join(' · ')} · ${money(mine.reduce((s,t)=>s+t.stake,0))} at risk</p>`:''}
-  ${!started&&me?`<div class="race-stake"><span>Bet size</span><div class="seg chips stake">${[5,10,20,50].map(v=>`<button class="${race.stake===v?'on':''}" data-act="raceStake" data-v="${v}">$${v}</button>`).join('')}</div></div>`:''}
+  ${mine.length&&!started?`<p class="bc-note">Your tickets: ${mine.map(t=>`${esc(b.horses[t.horse].name)} ${downs(t.stake)} at ${oddsLabel(b.horses[t.horse].odds)}`).join(' · ')} · ${downs(mine.reduce((s,t)=>s+t.stake,0))} at risk</p>`:''}
+  ${!started&&me?`<div class="race-stake"><span>Bet size</span><div class="seg chips stake">${[5,10,20,50].map(v=>`<button class="${race.stake===v?'on':''}" data-act="raceStake" data-v="${v}">${downs(v)}</button>`).join('')}</div></div>`:''}
   ${raceTrack(b,me)}
   ${!started&&me&&slipTotal(b.id)>0?(()=>{ const sl=slipFor(b.id); const lines=Object.entries(sl).map(([h,v])=>({h:Number(h),v}));
-   return `<section class="slip"><div class="cl-head"><b>🎫 Your slip</b><span class="chip amber">${money(slipTotal(b.id))} at risk</span></div>
-    ${lines.map(l=>`<div class="slip-row"><b>${esc(b.horses[l.h].name)}</b><small>${oddsLabel(b.horses[l.h].odds)} · wins ≈ ${money(raceTake(b,l.h,me,(myOn(b,me,l.h)||0)+l.v))}</small><span class="slip-amt"><button class="lnk" data-act="slipLess" data-id="${b.id}" data-h="${l.h}">−</button><em>${money(l.v)}</em><button class="lnk" data-act="slipMore" data-id="${b.id}" data-h="${l.h}">+</button></span><button class="lnk red" data-act="slipDrop" data-id="${b.id}" data-h="${l.h}">✕</button></div>`).join('')}
-    <div class="act-row"><button class="abtn go" data-act="slipSubmit" data-id="${b.id}"><span>🎫</span>Submit ticket<small>${lines.length} horse${lines.length>1?'s':''} · ${money(slipTotal(b.id))}</small></button><button class="abtn muted" data-act="slipClear" data-id="${b.id}"><span>🗑️</span>Clear</button></div></section>`; })():''}
+   return `<section class="slip"><div class="cl-head"><b>🎫 Your slip</b><span class="chip amber">${downs(slipTotal(b.id))} at risk</span></div>
+    ${lines.map(l=>`<div class="slip-row"><b>${esc(b.horses[l.h].name)}</b><small>${oddsLabel(b.horses[l.h].odds)} · wins ≈ ${downs(raceTake(b,l.h,me,(myOn(b,me,l.h)||0)+l.v))}</small><span class="slip-amt"><button class="lnk" data-act="slipLess" data-id="${b.id}" data-h="${l.h}">−</button><em>${downs(l.v)}</em><button class="lnk" data-act="slipMore" data-id="${b.id}" data-h="${l.h}">+</button></span><button class="lnk red" data-act="slipDrop" data-id="${b.id}" data-h="${l.h}">✕</button></div>`).join('')}
+    <div class="act-row"><button class="abtn go" data-act="slipSubmit" data-id="${b.id}"><span>🎫</span>Submit ticket<small>${lines.length} horse${lines.length>1?'s':''} · ${downs(slipTotal(b.id))}</small></button><button class="abtn muted" data-act="slipClear" data-id="${b.id}"><span>🗑️</span>Clear</button></div></section>`; })():''}
 
   <p class="bc-note">${esc(b.out.note)}</p>
   ${(b.out.transfers||[]).length?(()=>{
@@ -3341,9 +3370,9 @@ function raceCard(b,me){
    const line=(id,amt,cls)=>{
     const mineTix=tix.filter(t=>t.by===id);
     const detail=cls==='win'
-     ? mineTix.filter(t=>t.horse===win).map(t=>`${money(t.stake)} at ${oddsLabel(b.horses[t.horse].odds)}`).join(', ')
-     : mineTix.filter(t=>t.horse!==win).map(t=>`${esc(b.horses[t.horse].name)} ${money(t.stake)}`).join(', ');
-    return `<div class="po ${cls}"><b>${esc(F(id))}</b><span>${detail||'—'}</span><em>${cls==='win'?'+':'−'}${money(amt)}</em></div>`;
+     ? mineTix.filter(t=>t.horse===win).map(t=>`${downs(t.stake)} at ${oddsLabel(b.horses[t.horse].odds)}`).join(', ')
+     : mineTix.filter(t=>t.horse!==win).map(t=>`${esc(b.horses[t.horse].name)} ${downs(t.stake)}`).join(', ');
+    return `<div class="po ${cls}"><b>${esc(F(id))}</b><span>${detail||'—'}</span><em>${cls==='win'?'+':'−'}${downs(amt)}</em></div>`;
    };
    return `<div class="payout"><h4>The window</h4>${Object.entries(got).map(([id,v])=>line(id,v,'win')).join('')}${Object.entries(paid).map(([id,v])=>line(id,v,'lose')).join('')}</div>`;
   })():''}
@@ -3377,7 +3406,7 @@ function racePage(){
    <li>Don is the only winner, so he takes the whole <b>$30</b> and keeps his own $10.</li>
    <li>If Jared had also been on that horse, the $30 would split by stake × odds: Don’s 10 × 20 = 200 against Jared’s 10 × 3 = 30. Don gets <b>$26.09</b>, Jared <b>$3.91</b>.</li>
   </ul>
-  <p class="note">Every lane shows <b>wins ≈ $X</b> before the gate, which is what that ticket would collect on the money that’s down right now. It moves as more guys bet. Your own tickets show <b>you: $X</b> on the lane.</p>
+  <p class="note">Every lane shows <b>wins ≈ ${downs(30).replace('30','X')}</b> before the gate, which is what that ticket would collect on what’s down right now. It moves as more guys bet. Your own tickets show <b>you: $X</b> on the lane.</p>
   <p class="note">Nobody on the winner? Everybody keeps their money. Everybody on the winner? Push. It all lands in the same settle-up and Venmo screen as the rest.</p>
  </div></details>
  <label class="whoami">Who are you?<select id="b-me"><option value="">Pick your name</option>${S.players.map(p=>`<option value="${p.id}" ${me===p.id?'selected':''}>${esc(p.first)}${claimedByOther(p.id)?' (on another phone)':''}</option>`).join('')}</select></label>${identityCard()}
@@ -3393,6 +3422,7 @@ function racePage(){
  ${broken.length?`<div class="stbar" style="margin:10px 0">${broken.length} race${broken.length>1?'s':''} couldn’t be dealt — the site’s server files were out of date when they were opened.${admin?` <button class="lnk" data-act="voidBroken">Clear ${broken.length>1?'them':'it'}</button>`:' Ask the commissioner to clear them.'}</div>`:''}
  ${open.length?`<h2 class="sec">At the gate</h2>${open.map(b=>raceCard(b,me)).join('')}`:''}
  <div class="sec-div"></div><h2 class="sec">Results${done.length?` <small>${done.length}</small>`:''}</h2>${done.length?done.slice(0,30).map(b=>raceDoneRow(b,me)).join(''):'<p class="note">Nothing has run yet.</p>'}
+ ${downsBoard()}
  ${settleHTML(betState())}`;
 }
 /* ===== LIVE TICKER ===== */
@@ -3460,12 +3490,38 @@ function hall(){
  ${(()=>{ const tp=S.tournament.trophyPost&&FEED.find(p=>p.id===S.tournament.trophyPost); const src=tp&&feedPhoto(tp.id); return tp&&src?`<figure class="fieldpanel trophy"><img src="${src}" alt="The ${S.tournament.year} trophy photo"><figcaption><span class="sticker">The trophy · ${S.tournament.year}</span></figcaption></figure>`:''; })()}
  ${list.length?list.map(h=>{ const pl=S.players.find(p=>p.name===h.name||p.first===h.name||(h.id&&p.id===h.id)); return `<div class="hall-row ${h.year===S.tournament.year?'now':''}">${pl?playerPhoto(pl,'hall-ph'):'<div class="ph ph-empty mono hall-ph"><b>🏆</b></div>'}<span class="yr">${h.year}</span><div><b>${esc(h.name)}</b><small>${h.pts!=null?fmt(h.pts)+' counting pts':'Champion'}${h.note?' · '+esc(h.note):''}</small></div></div>`; }).join(''):`<p class="note center">${ch?'The commissioner hasn’t enshrined the '+S.tournament.year+' champion yet.':'The first name goes on the wall Saturday night, October 24.'}</p>`}`;
 }
+function houseRules(){
+ const t=S.tournament, pts=POINTS(), n=S.players.length, dn=RACE_DOWNS();
+ const roster=names(S.players.map(p=>p.id));
+ const seenKey='mbc26-rules-seen';
+ return `<h1 class="pagetitle">House Rules</h1>
+ <section class="rules">
+  <p class="rules-lede">${esc(t.name)} is a private game among ${n} friends. This page says what that means, in plain English, so nobody has to wonder.</p>
+  <ol class="rules-list">
+   <li><b>The games are ours.</b> ${esc(roster)} set the games, the stakes and the rules. Nobody outside this group can join, watch or play.</li>
+   <li><b>${pts?'We play for points.':'We settle among ourselves.'}</b> ${pts?'Nothing in this trip is played for money. Fairwaze keeps a running tally and that’s where it ends.':'Fairwaze works out who owes who and nets it down to the fewest payments. We pay each other directly — the app never holds, moves or processes a cent of it.'}</li>
+   <li><b>Nobody runs a house.</b> No one takes a cut, sets a line, or profits from the games. The commissioner keeps score; he plays by the same rules.</li>
+   <li><b>Fairwaze is a scoreboard, not a sportsbook.</b> It records what we agree to, does the arithmetic, and nothing else.</li>
+   <li><b>Grown-ups only.</b> Everyone here is 18 or older${pts?'':', and plays for amounts they’d shrug off'}. If a game stops being fun, say so and we scrap it — any game can be voided by the two guys in it.</li>
+  </ol>
+  <p class="note">Commissioner: ${esc(F(t.commissionerId))} · ${S.players.length} golfers · ${pts?'points':'dollars'}${dn?' · the Downs pays in Downs':''}</p>
+  <div class="act-row"><button class="abtn go" data-act="rulesOk"><span>👍</span>Got it<small>Mark these read</small></button><button class="abtn" data-act="rulesShare"><span>📲</span>Send to the group<small>Copies the text</small></button></div>
+ </section>`;
+}
+function rulesCard(){
+ if(rulesSeen||!S.players.length) return '';
+ return `<section class="composer bet rulescard" role="link" tabindex="0" data-nav="rules"><p class="k">Before you play</p><h3>House Rules</h3><p class="note">${esc(S.tournament.name)} is a private game among friends. Fairwaze keeps score — it doesn’t run the games, take a cut, or handle anyone’s money. Tap to read the six lines.</p></section>`;
+}
+function rulesText(){
+ return `${S.tournament.name} — House Rules\n\n`+[...document.querySelectorAll('.rules-list li')].map((li,i)=>`${i+1}. ${li.textContent}`).join('\n\n');
+}
 function more(){
  return `<h1 class="pagetitle">More</h1><div class="menu">
  <div role="link" tabindex="0" data-nav="founders"><b>The Founding Four</b><span>${esc(names(S.players.filter(p=>isFounder(p.id)).map(p=>p.id)))}</span></div>
  <div role="link" tabindex="0" data-act="sfxToggle"><b>🔊 Sound effects <span class="chip ${sfx.on?'':'amber'}">${sfx.on?'ON':'OFF'}</span></b><span>Horn when a round goes final, bugle at post time, sad trombone on a concession, and a shouted FORE! with every trash-talk line</span></div>
  <div role="link" tabindex="0" data-act="shareInvite"><b>📲 Invite the group</b><span>Copies a ready-to-paste text with the link and setup steps</span></div>
  <div role="link" tabindex="0" data-act="shareDemo"><b>⛳ Share Fairwaze with another group</b><span>Sends the demo link. $149 a year, loser pays.</span></div>
+ <div role="link" tabindex="0" data-nav="rules"><b>📜 House Rules</b><span>What this is, in six lines: a private game among friends</span></div>
  <div role="link" tabindex="0" data-nav="about"><b>About Fairwaze</b><span>What powers this site</span></div>
  <div role="link" tabindex="0" data-nav="bets"><b>Side bets</b><span>Optional. Me vs a guy, or team vs team.</span></div>
  <div role="link" tabindex="0" data-nav="recap"><b>Recaps</b><span>Daily and weekend recaps</span></div>
@@ -3888,7 +3944,7 @@ function adAdjust(){
 }
 function adSettings(){
  const t=S.tournament;
- return `<h2 class="sec">Tournament</h2><div class="fgrid">${fld('tournament.name','Name',t.name)}${fld('tournament.dates','Dates label',t.dates)}${fld('tournament.founded','Founded year (optional)',t.founded||'')}${fld('tournament.countN','Rounds that count (best N)',t.countN||'')}${fld('tournament.themeTitle','Theme song title',t.themeTitle||'')}${fld('tournament.themeBy','Theme song credit',t.themeBy||'')}${fld('tournament.themeUrl','Theme song file or link',t.themeUrl||'/theme.mp3')}${fld('tournament.demoUrl','Fairwaze demo link (for the Share button)',t.demoUrl||'')}<label class="fld"><span>Bystander tax</span><select data-set="tournament.taxOn"><option value="true" ${t.taxOn!==false?'selected':''}>On — every day with no action costs</option><option value="false" ${t.taxOn===false?'selected':''}>Off</option></select></label>${fld('tournament.taxRate','Tax per idle day ($)',t.taxRate||2.5)}${fld('tournament.taxCap','Tax cap per golfer ($)',t.taxCap||25)}${fld('tournament.taxFrom','Tax counts from (YYYY-MM-DD)',t.taxFrom||'')}${fld('tournament.fee','App fee for the year ($)',t.fee!=null?t.fee:160)}<label class="fld"><span>Who pays the app fee</span><select data-set="tournament.feeRule"><option value="off" ${t.feeRule==='off'?'selected':''}>Nobody — it’s covered</option><option value="loser" ${t.feeRule==='loser'||!t.feeRule?'selected':''}>Last place pays (also a slice on the Wheel of Misfortune)</option></select></label><label class="fld"><span>Fee is paid to</span><select data-set="tournament.commissionerId">${S.players.map(p=>`<option value="${p.id}" ${(t.commissionerId||'don')===p.id?'selected':''}>${esc(p.first)}</option>`).join('')}</select></label>${fld('tournament.start','Countdown target (ISO)',t.start)}
+ return `<h2 class="sec">Tournament</h2><div class="fgrid">${fld('tournament.name','Name',t.name)}${fld('tournament.dates','Dates label',t.dates)}${fld('tournament.founded','Founded year (optional)',t.founded||'')}${fld('tournament.countN','Rounds that count (best N)',t.countN||'')}${fld('tournament.themeTitle','Theme song title',t.themeTitle||'')}${fld('tournament.themeBy','Theme song credit',t.themeBy||'')}${fld('tournament.themeUrl','Theme song file or link',t.themeUrl||'/theme.mp3')}${fld('tournament.demoUrl','Fairwaze demo link (for the Share button)',t.demoUrl||'')}<label class="fld"><span>What the games are played for</span><select data-set="tournament.stakes"><option value="cash" ${(t.stakes||'cash')!=='points'?'selected':''}>Dollars — the group settles up on Venmo</option><option value="points" ${t.stakes==='points'?'selected':''}>Points — nobody pays anybody</option></select></label><label class="fld"><span>Fairwaze Downs plays for</span><select data-set="tournament.raceStakes"><option value="downs" ${(t.raceStakes||'downs')!=='cash'?'selected':''}>Downs — bragging rights, never in Settle Up</option><option value="cash" ${t.raceStakes==='cash'?'selected':''}>Dollars — race winnings land in Settle Up</option></select></label><label class="fld"><span>Bystander tax</span><select data-set="tournament.taxOn"><option value="true" ${t.taxOn!==false?'selected':''}>On — every day with no action costs</option><option value="false" ${t.taxOn===false?'selected':''}>Off</option></select></label>${fld('tournament.taxRate','Tax per idle day ($)',t.taxRate||2.5)}${fld('tournament.taxCap','Tax cap per golfer ($)',t.taxCap||25)}${fld('tournament.taxFrom','Tax counts from (YYYY-MM-DD)',t.taxFrom||'')}${fld('tournament.fee','App fee for the year ($)',t.fee!=null?t.fee:160)}<label class="fld"><span>Who pays the app fee</span><select data-set="tournament.feeRule"><option value="off" ${t.feeRule==='off'?'selected':''}>Nobody — it’s covered</option><option value="loser" ${t.feeRule==='loser'||!t.feeRule?'selected':''}>Last place pays (also a slice on the Wheel of Misfortune)</option></select></label><label class="fld"><span>Fee is paid to</span><select data-set="tournament.commissionerId">${S.players.map(p=>`<option value="${p.id}" ${(t.commissionerId||'don')===p.id?'selected':''}>${esc(p.first)}</option>`).join('')}</select></label>${fld('tournament.start','Countdown target (ISO)',t.start)}
  <label>Home hero<select data-bind="tournament.heroMode">${[['auto','Automatic'],['live','Force “Championship live”']].map(([v,l])=>`<option value="${v}" ${t.heroMode===v?'selected':''}>${l}</option>`).join('')}</select></label></div>
  <h2 class="sec">Rounds</h2>${S.rounds.map((r,i)=>`<details class="pedit"><summary><b>R${r.n}</b><span>${esc(r.nick)}</span></summary><div class="fgrid">${fld(`rounds.${i}.nick`,'Nickname',r.nick)}${fld(`rounds.${i}.course`,'Course',r.course)}${fld(`rounds.${i}.dateLabel`,'Date',r.dateLabel)}${fld(`rounds.${i}.tee`,'Tee time',r.tee)}</div></details>`).join('')}
  <h2 class="sec">Fake sponsors</h2><textarea id="spons" rows="6">${esc(S.sponsors.map(s=>s.join(' | ')).join('\n'))}</textarea>
@@ -3962,6 +4018,8 @@ async function act(a,el){
   try{ await feedApi.post({author:null,name:'🎡 The Wheel',text:`THE APP FEE: the Wheel of Misfortune landed on ${F(payer)}. He buys the app — ${money(t.fee)} to ${F(t.commissionerId)}.`},null); loadFeed(); }catch(e){}
   mfFee.on=false; mf.sig=''; go('home'); break; }
  case 'feeVoid': { if(!admin) return; if(!confirm('Void the app fee?')) return; await betEvent({type:'void',bet:el.dataset.id,by:null}); toast('Fee voided'); break; }
+ case 'rulesOk': { rulesSeen=true; store.set('mbc26-rules-seen','1',false); toast('Read. Go play.'); go('home'); break; }
+ case 'rulesShare': { const t=rulesText(); try{ if(navigator.share) await navigator.share({text:t}); else { await navigator.clipboard.writeText(t); toast('Copied'); } }catch(e){} break; }
  case 'payNow': { let pin=adminPin; if(!pin){ pin=prompt('Commissioner PIN for '+S.tournament.name+':'); if(!pin) return; }
   toast('Opening checkout…');
   try{ const r=await fetch('/api/pay',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:TRIP,pin,tier:el.dataset.tier||undefined})});
@@ -4091,6 +4149,9 @@ async function act(a,el){
  case 'betRound': betDraft.round=el.dataset.v==='champ'?'champ':Number(el.dataset.v); render(); break;
  case 'betOpp': betDraft.opp=el.dataset.v; render(); break;
  case 'betStake': betDraft.stake=Number(el.dataset.v); render(); break;
+ case 'settleMark': { const from=el.dataset.from,to=el.dataset.to,amt=Number(el.dataset.amt);
+  if(!confirm(`Square up ${F(from)} → ${F(to)} for ${money(amt)}?`)) return;
+  await betEvent({type:'settle',by:feedMe||'admin',from,to,amt,method:'points'},'Squared up'); break; }
  case 'venmo': { const from=el.dataset.from,to=el.dataset.to,amt=Number(el.dataset.amt),txn=el.dataset.txn;
   const handle=vHandle(txn==='charge'?from:to); if(!handle){ toast('No Venmo handle on file'); return; }
   const note=venmoNote();
@@ -4310,7 +4371,7 @@ async function pickIdentity(v){
 }
 (async()=>{ try{ const v=await store.get('mbc26-sfx',false); sfx.on=v==null||v===''?true:v==='1'; }catch(e){ sfx.on=true; }
  try{ const g=new URLSearchParams(location.search).get('go'); if(g){ ROUTE=g; history.replaceState(null,'',location.pathname); } }catch(e){}
- await load(); const me=await store.get('mbc26-me',false); if(me) feedMe=me; await initFeedSeen(); deviceId=await store.get('mbc26-device',false); if(!deviceId){ deviceId='guest-'+Math.random().toString(36).slice(2,10); store.set('mbc26-device',deviceId,false); } render(); checkEvent(); await loadClaims(); await loadFeed(); await loadBets(); await loadSotd(); render(); loadBilling(); try{ const q=new URLSearchParams(location.search); if(q.get('started')==='1'){ setTimeout(()=>toast('Card saved — your free week has started. Cancel any time before day 7 and you pay nothing.'),600); setTimeout(loadBilling,3500); history.replaceState(null,'',location.pathname); } else if(q.get('paid')==='1'){ setTimeout(()=>toast('Payment received — thank you. You’re all set.'),600); setTimeout(loadBilling,4000); history.replaceState(null,'',location.pathname); } else if(q.get('pay')==='cancel'){ setTimeout(()=>toast('Checkout cancelled — nothing was charged.'),600); history.replaceState(null,'',location.pathname); } }catch(e){} syncAppBadge(); pushInit(); checkVersion(); themeInit(); })();
+ await load(); rulesSeen=!!(await store.get('mbc26-rules-seen',false)); const me=await store.get('mbc26-me',false); if(me) feedMe=me; await initFeedSeen(); deviceId=await store.get('mbc26-device',false); if(!deviceId){ deviceId='guest-'+Math.random().toString(36).slice(2,10); store.set('mbc26-device',deviceId,false); } render(); checkEvent(); await loadClaims(); await loadFeed(); await loadBets(); await loadSotd(); render(); loadBilling(); try{ const q=new URLSearchParams(location.search); if(q.get('started')==='1'){ setTimeout(()=>toast('Card saved — your free week has started. Cancel any time before day 7 and you pay nothing.'),600); setTimeout(loadBilling,3500); history.replaceState(null,'',location.pathname); } else if(q.get('paid')==='1'){ setTimeout(()=>toast('Payment received — thank you. You’re all set.'),600); setTimeout(loadBilling,4000); history.replaceState(null,'',location.pathname); } else if(q.get('pay')==='cancel'){ setTimeout(()=>toast('Checkout cancelled — nothing was charged.'),600); history.replaceState(null,'',location.pathname); } }catch(e){} syncAppBadge(); pushInit(); checkVersion(); themeInit(); })();
 setInterval(checkVersion,5*60*1000);
 setInterval(()=>{ if(!S||!betsLoaded) return; try{ raceAutoStart(); }catch(e){} try{ raceCallTick(); }catch(e){} try{ replayCheck(); }catch(e){} if(ROUTE==='race'&&betState().some(b=>b.kind==='race'&&!b.order&&b.postAt)) render(); },10000);
 setInterval(async()=>{ if(ROUTE==='gulp'){ const n=BEERS.length; await loadBeers(); if(BEERS.length!==n) render(); return; } if(!['bets','duel','open','games'].includes(ROUTE)) return; const f=document.activeElement; if(f&&['INPUT','TEXTAREA','SELECT'].includes(f.tagName)) return; const n=BETEV.length; await loadBets(); if(BETEV.length!==n) render(); },15000);
