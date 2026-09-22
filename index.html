@@ -703,6 +703,11 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 </style></head><body><div id="app"><p style="text-align:center;padding:40vh 0;font-family:serif">Raking the bunkers…</p></div><div id="toast" role="status" aria-live="polite"></div>
 <script>if(!/^\/t\/[a-z0-9-]{3,32}/i.test(location.pathname)){ location.replace('/home'); }</script><script>
 /* ===== ENGINE START ===== */
@@ -969,11 +974,11 @@ function stateFromConfig(cfg){
   const dnp=players.map(p=>p.id).filter(id=>!who.includes(id));
   let teams=[]; if(r.teams&&r.teams.length){ teams=r.teams.map((t,ti)=>({id:String.fromCharCode(65+ti),name:(t.name||('TEAM '+String.fromCharCode(65+ti))).toUpperCase(),members:(t.members||[]).map(k=>pid(k)).filter(Boolean)})); }
   else { const size=Math.max(1,Number(r.teamSize)||Math.ceil(who.length/2)); const nT=Math.max(1,Math.ceil(who.length/size)); teams=Array.from({length:nT},(_,ti)=>({id:String.fromCharCode(65+ti),name:'TEAM '+String.fromCharCode(65+ti),members:[]})); who.forEach((id,k)=>teams[k%nT].members.push(id)); }
-  const teamPts=fmt==='scramble'?(teams.length<=2?[10,4]:teams.length===3?[10,6,2]:[10,7,4,2].slice(0,teams.length)):undefined;
+  const teamPts=fmt==='scramble'?(teams.length<=2?[10,4]:teams.length===3?[10,6,2]:teams.length===4?[10,7,4,2]:Array.from({length:teams.length},(_,k)=>Math.round((10-9*k/(teams.length-1))*10)/10)):undefined;
   const d=new Date(`${r.date||cfg.start||'2026-01-01'}T12:00:00`); const dateLabel=isNaN(d)?(r.date||''):d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const base={n,date:r.date||'',nick:(r.nick||`ROUND ${n}`).toUpperCase(),course:r.course||('Course '+n),dateLabel,tee:r.tee||'',format:fmt,fmtLabel:fmtLabel({...r,format:fmt}),hiMode:fmt==='scramble'?'sum':'avg',dnp,teams,locked:true,
    ph:{},gross:{},scores:{},playoff:null,status:'open',result:null,allow:Number(cfg.allow)||100,offLow:cfg.offLow!==false,si:Array(18).fill(''),slope:r.slope||'',rating:r.rating||'',par:r.par||'',teeName:r.teeName||''};
-  if(fmt==='scramble'){ base.teamPts=teamPts; base.available=teamPts.length===2?`${teamPts[0]} win · ${teamPts[1]} loss · ${(teamPts[0]+teamPts[1])/2} tie`:teamPts.join(' · ')+' per player'; base.scoring=['One team score per hole. One total after 18.','Lowest team total wins.','No individual scores in this round.']; base.pointsText=[`Winning team: ${teamPts[0]} points per golfer.`,`Losing team: ${teamPts[teamPts.length-1]} points per golfer.`,'Ties split the points of the tied positions.']; }
+  if(fmt==='scramble'){ base.teamPts=teamPts; base.available=teamPts.length===2?`${teamPts[0]} win · ${teamPts[1]} loss · ${(teamPts[0]+teamPts[1])/2} tie`:teamPts.length<=6?teamPts.join(' · ')+' per player':`${teamPts[0]} for the winners down to ${teamPts[teamPts.length-1]} for last, per player`; base.scoring=['One team score per hole. One total after 18.','Lowest team total wins.','No individual scores in this round.']; base.pointsText=[`Winning team: ${teamPts[0]} points per golfer.`,`Losing team: ${teamPts[teamPts.length-1]} points per golfer.`,'Ties split the points of the tied positions.']; }
   else { const nP=who.length; base.available=`Up to ${nP+2} pts — ${nP} for low net + 2 team bonus`; base.scoring=[`Rank all ${nP} golfers by NET score. Lowest net is first.`,'Each team counts its best net scores. The worst is dropped for the team result only.','Lowest combined total wins the team competition.']; base.pointsText=[`Individual: 1st ${nP} down to 1 for last.`,'Tied golfers split the points of the positions they occupy.','Team win: +2 each. Team tie: +1 each.']; }
   return base;
  });
@@ -1071,7 +1076,7 @@ function storageBanner(){
 }
 async function sha(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('mbc26:'+s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-const BUILD=130;
+const BUILD=131;
 let updateReady=false;
 let ROUTE='home';
 const scroller=()=>document.getElementById('scroller');

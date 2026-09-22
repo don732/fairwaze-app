@@ -702,6 +702,12 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 
 .wiz{max-width:720px;margin:0 auto;padding:14px 14px 60px;color:var(--cream)}
 .wz-head h1{font:400 clamp(34px,9vw,56px)/1 var(--disp);margin:4px 0 8px;text-shadow:4px 4px 0 #000}
@@ -723,8 +729,9 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .wz-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.wz-top .k{margin:0}
 .wz-contact{color:var(--lime);font:800 14px var(--cond);letter-spacing:.03em;text-decoration:underline;text-underline-offset:3px}
+.paste{margin:8px 0 10px;border:3px solid #000;background:#000;padding:8px 10px}.paste summary{cursor:pointer;color:var(--lime);font-weight:800}.paste .btn{margin-top:6px}
 .wz-help{margin:28px 0 0;padding:14px;border:3px solid #000;background:#000;text-align:center}.wz-help p{margin:0 0 6px;font-weight:700;color:#d8cfb3}.wz-help .wz-contact{font-size:17px}
-</style></head><body><div id="app"></div><script>
+</style></head><body><form name="signup" data-netlify="true" netlify-honeypot="bot-field" hidden><input name="event"><input name="link"><input name="plan"><input name="commissioner"><input name="email"><input name="mobile"><input name="venmo"><input name="golfers"><input name="first_round"><input name="again"><input name="bot-field"></form><div id="app"></div><script>
 /* ===== ENGINE START ===== */
 const r2 = x => Math.round(x*100)/100;
 const fmt = x => x==null||isNaN(x) ? '—' : (Number.isInteger(r2(x)) ? String(r2(x)) : String(r2(x)).replace(/0+$/,''));
@@ -989,11 +996,11 @@ function stateFromConfig(cfg){
   const dnp=players.map(p=>p.id).filter(id=>!who.includes(id));
   let teams=[]; if(r.teams&&r.teams.length){ teams=r.teams.map((t,ti)=>({id:String.fromCharCode(65+ti),name:(t.name||('TEAM '+String.fromCharCode(65+ti))).toUpperCase(),members:(t.members||[]).map(k=>pid(k)).filter(Boolean)})); }
   else { const size=Math.max(1,Number(r.teamSize)||Math.ceil(who.length/2)); const nT=Math.max(1,Math.ceil(who.length/size)); teams=Array.from({length:nT},(_,ti)=>({id:String.fromCharCode(65+ti),name:'TEAM '+String.fromCharCode(65+ti),members:[]})); who.forEach((id,k)=>teams[k%nT].members.push(id)); }
-  const teamPts=fmt==='scramble'?(teams.length<=2?[10,4]:teams.length===3?[10,6,2]:[10,7,4,2].slice(0,teams.length)):undefined;
+  const teamPts=fmt==='scramble'?(teams.length<=2?[10,4]:teams.length===3?[10,6,2]:teams.length===4?[10,7,4,2]:Array.from({length:teams.length},(_,k)=>Math.round((10-9*k/(teams.length-1))*10)/10)):undefined;
   const d=new Date(`${r.date||cfg.start||'2026-01-01'}T12:00:00`); const dateLabel=isNaN(d)?(r.date||''):d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const base={n,date:r.date||'',nick:(r.nick||`ROUND ${n}`).toUpperCase(),course:r.course||('Course '+n),dateLabel,tee:r.tee||'',format:fmt,fmtLabel:fmtLabel({...r,format:fmt}),hiMode:fmt==='scramble'?'sum':'avg',dnp,teams,locked:true,
    ph:{},gross:{},scores:{},playoff:null,status:'open',result:null,allow:Number(cfg.allow)||100,offLow:cfg.offLow!==false,si:Array(18).fill(''),slope:r.slope||'',rating:r.rating||'',par:r.par||'',teeName:r.teeName||''};
-  if(fmt==='scramble'){ base.teamPts=teamPts; base.available=teamPts.length===2?`${teamPts[0]} win · ${teamPts[1]} loss · ${(teamPts[0]+teamPts[1])/2} tie`:teamPts.join(' · ')+' per player'; base.scoring=['One team score per hole. One total after 18.','Lowest team total wins.','No individual scores in this round.']; base.pointsText=[`Winning team: ${teamPts[0]} points per golfer.`,`Losing team: ${teamPts[teamPts.length-1]} points per golfer.`,'Ties split the points of the tied positions.']; }
+  if(fmt==='scramble'){ base.teamPts=teamPts; base.available=teamPts.length===2?`${teamPts[0]} win · ${teamPts[1]} loss · ${(teamPts[0]+teamPts[1])/2} tie`:teamPts.length<=6?teamPts.join(' · ')+' per player':`${teamPts[0]} for the winners down to ${teamPts[teamPts.length-1]} for last, per player`; base.scoring=['One team score per hole. One total after 18.','Lowest team total wins.','No individual scores in this round.']; base.pointsText=[`Winning team: ${teamPts[0]} points per golfer.`,`Losing team: ${teamPts[teamPts.length-1]} points per golfer.`,'Ties split the points of the tied positions.']; }
   else { const nP=who.length; base.available=`Up to ${nP+2} pts — ${nP} for low net + 2 team bonus`; base.scoring=[`Rank all ${nP} golfers by NET score. Lowest net is first.`,'Each team counts its best net scores. The worst is dropped for the team result only.','Lowest combined total wins the team competition.']; base.pointsText=[`Individual: 1st ${nP} down to 1 for last.`,'Tied golfers split the points of the positions they occupy.','Team win: +2 each. Team tie: +1 each.']; }
   return base;
  });
@@ -1017,7 +1024,7 @@ function stateFromConfig(cfg){
 }
 
 
-const CONTACT='dfraz8989@gmail.com';
+const CONTACT='dfrazier@fairwaze.app';
 const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cfg={kind:'trip',name:'',tagline:'',dates:'',area:'',tier:'season',players:[],rounds:[],commissioner:{first:'',last:'',email:'',mobile:'',venmo:''},countN:'',allow:100,offLow:true,fee:0,feeRule:'off',punishments:[],pastChampions:[],memorial:{name:'',text:''},sponsors:[],slug:'',pin:''};
@@ -1027,7 +1034,7 @@ const FUN_TAGS=['Run your trip like a major.','Three days to determine something
 const FUN_PUN=['Wear the ugliest hat in the pro shop for 9 holes','Carry everyone’s clubs to the carts tomorrow','First-tee speech in a British accent','Buy the first round tonight','Putt with the flagstick in for a full round','Caddie for the winner on the first tee'];
 cfg.tagline=FUN_TAGS[0]; cfg.punishments=[...FUN_PUN];
 let step=0; const STEPS=['The event','You','The golfers','The rounds','The rules','The flavor','Your link'];
-function slugify(s){ return String(s||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,28); }
+function slugify(s){ return String(s||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,28).replace(/-+$/,''); }
 function playersRows(){ return cfg.players.map((p,i)=>`<div class="prow" data-i="${i}">
  <div class="pphoto">${p.photo?`<img src="${p.photo}" alt="">`:'<span>📷</span>'}<label class="lnk">${p.photo?'Change':'Add photo'}<input type="file" accept="image/*" data-photo="${i}" hidden></label></div>
  <div class="pmain"><input placeholder="First" data-p="${i}" data-k="first" value="${esc(p.first)}"><input placeholder="Last" data-p="${i}" data-k="last" value="${esc(p.last)}"><input placeholder="H.I." inputmode="decimal" data-p="${i}" data-k="hi" value="${esc(p.hi)}"><input placeholder="Venmo (no @)" data-p="${i}" data-k="venmo" value="${esc(p.venmo)}"><input placeholder="Mobile" inputmode="tel" data-p="${i}" data-k="mobile" value="${esc(p.mobile)}"></div>
@@ -1060,7 +1067,9 @@ function view(){
    <label>Where<input id="f-area" placeholder="Pinehurst, NC" value="${esc(cfg.area)}"></label>
    <label>Plan<select id="f-tier"><option value="season" ${cfg.tier==='season'?'selected':''}>The Season — $149 for the group, all year (loser pays, or spins for it)</option><option value="weekend" ${cfg.tier==='weekend'?'selected':''}>The Weekend — $99, one event (loser pays)</option></select></label>`,
   `<p class="note">You run it. Everything else is the guys.</p><div class="two"><label>First<input id="c-first" value="${esc(cfg.commissioner.first)}"></label><label>Last<input id="c-last" value="${esc(cfg.commissioner.last)}"></label></div><label>Email<input id="c-email" type="email" value="${esc(cfg.commissioner.email)}"></label><label>Mobile<input id="c-mobile" inputmode="tel" value="${esc(cfg.commissioner.mobile)}"></label><label>Venmo (no @)<input id="c-venmo" value="${esc(cfg.commissioner.venmo)}"></label><p class="note">Add yourself again on the next screen if you’re playing. Most commissioners are.</p>`,
-  `<p class="note">A first name and a handicap index is enough. Everything under “More” is optional and makes it funnier.</p><div id="players">${playersRows()}</div><button type="button" class="btn ghost wide" data-act="addP">+ Add a golfer</button>`,
+  `<p class="note">A first name and a handicap index is enough. Everything under “Build his profile” is optional and makes it funnier. Up to 144 golfers.</p>
+   <details class="paste"><summary>Big field? Paste a list instead</summary><p class="note">One golfer per line: name, then handicap. Commas or tabs both work, so you can copy straight out of a spreadsheet.</p><textarea id="p-paste" rows="6" placeholder="Mike Smith, 12.4&#10;José Ruiz, 8&#10;Beth-Ann O'Brien	21.3"></textarea><button type="button" class="btn ghost wide" data-act="pasteP">Add these golfers</button></details>
+   <div id="players">${playersRows()}</div><button type="button" class="btn ghost wide" data-act="addP">+ Add a golfer</button><p class="note center">${cfg.players.filter(p=>p.first.trim()).length} golfer${cfg.players.filter(p=>p.first.trim()).length===1?'':'s'} so far</p>`,
   `<p class="note">One row per round. Slope and par can wait; the commissioner can fill them the morning of.</p><div id="rounds">${roundsRows()}</div><button type="button" class="btn ghost wide" data-act="addR">+ Add a round</button>`,
   `<label>Rounds that count toward the championship<input id="r-count" inputmode="numeric" placeholder="${Math.max(1,cfg.rounds.length-1)} (best ${Math.max(1,cfg.rounds.length-1)} of ${cfg.rounds.length})" value="${esc(cfg.countN)}"></label>
    <label>Shamble handicap allowance (%)<input id="r-allow" inputmode="numeric" value="${esc(cfg.allow)}"></label>
@@ -1091,7 +1100,7 @@ function read(){
  if(g('r-count')!==undefined){ cfg.countN=g('r-count'); cfg.allow=Number(g('r-allow'))||100; cfg.offLow=document.getElementById('r-offlow').checked; cfg.feeRule=g('r-feerule'); cfg.fee=Number(g('r-fee'))||0; cfg.taxOn=document.getElementById('r-taxon').checked; cfg.taxRate=Number(g('r-taxrate'))||2.5; cfg.taxCap=Number(g('r-taxcap'))||25; }
  if(g('x-pun')!==undefined){ cfg.punishments=g('x-pun').split('\n').map(s=>s.trim()).filter(Boolean); cfg.pastChampions=g('x-hall').split('\n').map(s=>s.trim()).filter(Boolean).map(l=>{ const m=/^(\d{4})\s+(.+)$/.exec(l); return m?{year:Number(m[1]),name:m[2]}:{year:'',name:l}; }); cfg.memorial={name:g('x-memname'),text:g('x-memtext')}; cfg.sponsors=g('x-spon').split('\n').map(s=>s.trim()).filter(Boolean); }
  if(g('s-slug')!==undefined){ cfg.slug=slugify(g('s-slug')); cfg.pin=g('s-pin'); }
- try{ localStorage.setItem('fairwaze-new',JSON.stringify({...cfg,players:cfg.players.map(p=>({...p,photo:p.photo&&p.photo.length<200000?p.photo:''}))})); }catch(e){}
+ try{ localStorage.setItem('fairwaze-new',JSON.stringify({...cfg,players:cfg.players.map(p=>({...p,photo:p.photo&&p.photo.length<200000&&cfg.players.length<=24?p.photo:''}))})); }catch(e){}
 }
 function validate(){
  if(step===0&&!cfg.name.trim()) return 'Give the event a name.';
@@ -1107,24 +1116,39 @@ const photos={};
  return {...cfg,players,rounds,photos,commissionerFirst:cfg.commissioner.first,year:rounds[0]&&rounds[0].date?Number(rounds[0].date.slice(0,4)):new Date().getFullYear(),start:rounds[0]&&rounds[0].date?rounds[0].date:'' ,memorial:cfg.memorial.name?cfg.memorial:null};
 }
 async function checkSlug(){ const s=cfg.slug; const n=$('#slug-note'); if(!n) return; if(!s||s.length<3){ n.textContent='At least 3 characters.'; return false; } try{ const r=await (await fetch('/api/provision?slug='+encodeURIComponent(s))).json(); n.textContent=r.ok?'✓ Available':'That link is taken — try another.'; n.className='note '+(r.ok?'ok':'bad'); return !!r.ok; }catch(e){ n.textContent='Couldn’t check — try again.'; return false; } }
+let building=false;
 async function build(){
+ if(building) return; building=true; const btn=document.querySelector('[data-act=build]'); if(btn){ btn.disabled=true; btn.textContent='Building…'; }
+ try{ await buildInner(); } finally { building=false; const b2=document.querySelector('[data-act=build]'); if(b2){ b2.disabled=false; b2.textContent='🏌️ Build my site'; } }
+}
+async function buildInner(){
  read(); const out=$('#out'); const err=[]; if(!cfg.name.trim()) err.push('event name'); if(cfg.players.filter(p=>p.first.trim()).length<2) err.push('two golfers'); if(!cfg.rounds.some(r=>r.course.trim())) err.push('a round'); if(!/^\d{4,8}$/.test(cfg.pin)) err.push('a 4–8 digit PIN'); if(!cfg.slug||cfg.slug.length<3) err.push('a link');
  if(err.length){ out.innerHTML=`<p class="err">Still need: ${err.join(', ')}.</p>`; return; }
  if(!(await checkSlug())){ out.innerHTML='<p class="err">Pick a different link.</p>'; return; }
  out.innerHTML='<p class="note">Building…</p>';
  const built=buildConfig(); const state=stateFromConfig(built);
- try{ const r=await fetch('/api/provision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:cfg.slug,pin:cfg.pin,state,photos:built.photos,email:cfg.commissioner.email,tier:cfg.tier})});
+ try{ const r=await fetch('/api/provision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug:cfg.slug,pin:cfg.pin,state,photos:{},email:cfg.commissioner.email,tier:cfg.tier})});
   if(!r.ok){ out.innerHTML=`<p class="err">${esc(await r.text())}</p>`; return; }
   const j=await r.json(); const url=location.origin+j.url;
+  const phKeys=Object.keys(built.photos||{}); let sent=0, missed=0;
+  for(let i=0;i<phKeys.length;i+=8){ out.innerHTML=`<p class="note">Uploading photos… ${Math.min(i+8,phKeys.length)} of ${phKeys.length}</p>`; const batch=Object.fromEntries(phKeys.slice(i,i+8).map(k=>[k,built.photos[k]]));
+   try{ const pr=await fetch('/api/provision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'photos',slug:cfg.slug,pin:cfg.pin,photos:batch})}); if(pr.ok){ sent+=(await pr.json()).saved||0; } else missed+=Object.keys(batch).length; }catch(e){ missed+=Object.keys(batch).length; } }
+  // tell Don: a copy of every sign-up goes to Netlify Forms, which emails him (fire and forget)
+  try{ const f=new URLSearchParams({'form-name':'signup',event:state.tournament.name,link:url,plan:cfg.tier==='weekend'?'The Weekend ($99)':'The Season ($149)',commissioner:((cfg.commissioner.first||'')+' '+(cfg.commissioner.last||'')).trim(),email:cfg.commissioner.email||'',mobile:cfg.commissioner.mobile||'',venmo:cfg.commissioner.venmo||'',golfers:String(state.players.length),first_round:(state.rounds[0]&&(state.rounds[0].course+' · '+(state.rounds[0].date||'')))||'',again:j.again?'yes (retry)':'no'});
+   fetch('/new.html',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:f.toString()}).catch(()=>{}); }catch(e){}
   const invite=`⛳ ${state.tournament.name}${cfg.dates?' · '+cfg.dates:''}\n\n${url}\n\n1) Open that in Safari, tap Share → Add to Home Screen, then open it from the icon.\n2) Pick your name once (that phone becomes you).\n3) Feed → 🔔 Turn on notifications.`;
-  out.innerHTML=`<section class="done"><p class="k">It’s live</p><h2>${esc(state.tournament.name)}</h2><a class="btn wide big" href="${url}">Open your site →</a><p class="note">Commissioner PIN: <b>${esc(cfg.pin)}</b>. More → Commissioner → unlock → Setup for the checklist.</p><label>Text this to the group<textarea rows="6" readonly>${esc(invite)}</textarea></label><button type="button" class="btn ghost wide" data-act="copy" data-v="${esc(invite)}">Copy the invite</button></section>`;
+  out.innerHTML=`<section class="done"><p class="k">It’s live</p><h2>${esc(state.tournament.name)}</h2><a class="btn wide big" href="${url}">Open your site →</a>${missed?`<p class="err">${missed} photo${missed===1?'':'s'} didn’t upload — add them later from Commissioner → Golfers.</p>`:''}<p class="note">Commissioner PIN: <b>${esc(cfg.pin)}</b>. More → Commissioner → unlock → Setup for the checklist.</p><label>Text this to the group<textarea rows="6" readonly>${esc(invite)}</textarea></label><button type="button" class="btn ghost wide" data-act="copy" data-v="${esc(invite)}">Copy the invite</button></section>`;
   try{ localStorage.removeItem('fairwaze-new'); }catch(e){}
  }catch(e){ out.innerHTML='<p class="err">No connection. Try again.</p>'; }
 }
 document.addEventListener('click',async e=>{ const el=e.target.closest('[data-act]'); if(!el) return; const act=el.dataset.act; read();
  if(act==='next'){ const v=validate(); if(v){ alert(v); return; } step++; view(); window.scrollTo(0,0); if(step===STEPS.length-1) checkSlug(); }
  else if(act==='back'){ step--; view(); window.scrollTo(0,0); }
- else if(act==='addP'){ cfg.players.push({first:'',last:'',hi:'',venmo:'',mobile:''}); view(); }
+ else if(act==='addP'){ if(cfg.players.length>=144){ alert('144 golfers is the most one event holds. Bigger than that? Contact us and we’ll set it up.'); return; } cfg.players.push({first:'',last:'',hi:'',venmo:'',mobile:''}); view(); }
+ else if(act==='pasteP'){ const lines=(document.getElementById('p-paste').value||'').split(/\n+/).map(l=>l.trim()).filter(Boolean); let added=0;
+  cfg.players=cfg.players.filter(p=>(p.first||'').trim()||(p.last||'').trim());
+  for(const l of lines){ if(cfg.players.length>=144) break; const parts=l.split(/\t|,/).map(x=>x.trim()).filter(Boolean); let hi=''; if(parts.length>1&&/^[+-]?\d+(\.\d+)?$/.test(parts[parts.length-1])) hi=parts.pop(); const nm=parts.join(' ').split(/\s+/); if(!nm[0]) continue; cfg.players.push({first:nm[0],last:nm.slice(1).join(' '),hi,venmo:'',mobile:''}); added++; }
+  view(); alert(added?`Added ${added} golfer${added===1?'':'s'}.${cfg.players.length>=144?' That’s the 144 maximum.':''}`:'Nothing to add — one golfer per line, like: Mike Smith, 12.4'); }
  else if(act==='delP'){ cfg.players.splice(Number(el.dataset.i),1); view(); }
  else if(act==='addR'){ cfg.rounds.push({nick:'',course:'',date:'',tee:'',format:'scramble',teamSize:4}); view(); }
  else if(act==='delR'){ cfg.rounds.splice(Number(el.dataset.i),1); view(); }

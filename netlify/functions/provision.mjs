@@ -13,13 +13,29 @@ export default async (req) => {
   if (req.method !== "POST") return new Response("POST only", { status: 405 });
   let b = {};
   try { b = await req.json(); } catch { return new Response("Bad JSON", { status: 400 }); }
+  if (b.action === "photos") {
+    // big fields send their photos a batch at a time, after the trip exists; the commissioner PIN proves it's theirs
+    const slug2 = String(b.slug || "").toLowerCase(); const meta2 = await metaFor(slug2);
+    if (!meta2 || meta2.pinHash !== hashPin(String(b.pin || ""))) return new Response("Not your trip", { status: 403 });
+    const ph = b.photos && typeof b.photos === "object" ? b.photos : {};
+    const keys = Object.keys(ph).filter((k) => /^m[a-z0-9]{4,20}$/.test(k) && typeof ph[k] === "string" && ph[k].startsWith("data:image/jpeg;base64,") && ph[k].length < 900_000).slice(0, 12);
+    setTrip(slug2); const st2 = tripStore("myrtle-championship");
+    for (const k of keys) await st2.set("mbc26-photo-" + k, ph[k]);
+    setTrip("myrtle");
+    return Response.json({ ok: true, saved: keys.length });
+  }
   const slug = String(b.slug || "").toLowerCase();
   if (!SLUG_RE.test(slug) || ["myrtle", "new", "demo", "api", "t"].includes(slug)) return new Response("Bad slug", { status: 400 });
-  if (await metaFor(slug)) return new Response("That link is taken", { status: 409 });
   const pin = String(b.pin || "");
   if (!/^\d{4,8}$/.test(pin)) return new Response("PIN must be 4–8 digits", { status: 400 });
+  const existing = await metaFor(slug);
+  if (existing) {
+    // the same commissioner retrying (double tap, dropped connection): hand back the trip he already made
+    if (existing.pinHash === hashPin(pin) && existing.email && existing.email === String(b.email || "").slice(0, 120)) return Response.json({ ok: true, slug, url: `/t/${slug}/`, again: true });
+    return new Response("That link is taken", { status: 409 });
+  }
   const state = b.state;
-  if (!state || !Array.isArray(state.players) || state.players.length < 2 || state.players.length > 16 || !Array.isArray(state.rounds) || !state.rounds.length || state.rounds.length > 12) return new Response("Bad state", { status: 400 });
+  if (!state || !Array.isArray(state.players) || state.players.length < 2 || state.players.length > 144 || !Array.isArray(state.rounds) || !state.rounds.length || state.rounds.length > 12) return new Response("Bad state", { status: 400 });
   const raw = JSON.stringify(state);
   if (raw.length > 4_000_000) return new Response("State too large", { status: 413 });
   const photos = b.photos && typeof b.photos === "object" ? b.photos : {};
