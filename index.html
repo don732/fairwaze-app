@@ -719,6 +719,13 @@ html.ios-browser .nav{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 52px
 .stbar.bill.warn{background:#ffb3ac}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 .nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
+.nf{padding:40px 16px;color:var(--cream)}.nf a{color:var(--lime)}
 </style></head><body><div id="app"><p style="text-align:center;padding:40vh 0;font-family:serif">Raking the bunkers…</p></div><div id="toast" role="status" aria-live="polite"></div>
 <script>if(!/^\/t\/[a-z0-9-]{3,32}/i.test(location.pathname)){ location.replace('/home'); }</script><script>
 /* ===== ENGINE START ===== */
@@ -1128,7 +1135,7 @@ function storageBanner(){
 }
 async function sha(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('mbc26:'+s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-const BUILD=133;
+const BUILD=134;
 let updateReady=false;
 let ROUTE='home';
 const scroller=()=>document.getElementById('scroller');
@@ -2047,6 +2054,7 @@ function betOutcome(b){
  return {st:'done',winners:W,note:`${r.teams.find(t=>t.id===wins[0]).name} won. Each loser pays ${money(b.stake)}, split among ${W.length} winner${W.length>1?'s':''}.`,transfers};
 }
 const vHandle=id=>{ const p=P(id); const h=p&&p.venmo?String(p.venmo).trim().replace(/^@/,''):''; return /^[A-Za-z0-9_-]{2,40}$/.test(h)?h:''; };
+function venmoNote(){ const t=(S.tournament.short||S.tournament.name||'Fairwaze').replace(/^THE\s+/i,''); return `${t} ⛳🏇🍺🎉`; }
 function venmoUrl(handle,txn,amt,note){ return `https://venmo.com/${encodeURIComponent(handle)}?txn=${txn}&amount=${amt.toFixed(2)}&note=${encodeURIComponent(note)}`; }
 function settleEvents(){
  const undone=new Set(BETEV.filter(e=>e.type==='unsettle').map(e=>e.bet));
@@ -4085,7 +4093,7 @@ async function act(a,el){
  case 'betStake': betDraft.stake=Number(el.dataset.v); render(); break;
  case 'venmo': { const from=el.dataset.from,to=el.dataset.to,amt=Number(el.dataset.amt),txn=el.dataset.txn;
   const handle=vHandle(txn==='charge'?from:to); if(!handle){ toast('No Venmo handle on file'); return; }
-  const note=`${S.tournament.name} side bets ⛳ ${txn==='charge'?F(from)+' → '+F(to):''}`.trim();
+  const note=venmoNote();
   window.open(venmoUrl(handle,txn,amt,note),'_blank','noopener');
   await betEvent({type:'settle',by:feedMe,from,to,amt,method:txn},txn==='charge'?'Venmo request opened. Hit send in Venmo.':'Venmo opened. Hit pay in Venmo.'); break; }
  case 'unsettle': if(!confirm('Undo this? The amount goes back on the settle-up list.')) return; await betEvent({type:'unsettle',bet:el.dataset.id,by:feedMe||'admin'},'Undone'); break;
